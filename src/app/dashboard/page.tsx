@@ -23,15 +23,15 @@ interface Forge {
   title: string;
   category: string;
   duration_days: number;
-  stake: string;
+  stake_amount: string;
   status: string;
   created_at: string;
 }
 
 interface Profile {
   forge_score: number;
-  buffer_days: number;
-  total_staked: number;
+  streak_days: number;
+  completed_goals: number;
 }
 
 export default function DashboardPage() {
@@ -52,23 +52,23 @@ export default function DashboardPage() {
       }
       setUser(user);
 
-      // Fetch Profile
+      // Fetch Profile (from 'users' table in public schema)
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
       
       if (profileData) setProfile(profileData);
 
-      // Fetch Forges
-      const { data: forgeData } = await supabase
-        .from('forges')
+      // Fetch Goals (from 'goals' table)
+      const { data: goalData } = await supabase
+        .from('goals')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
-      if (forgeData) setForges(forgeData);
+      if (goalData) setForges(goalData);
       
       setIsLoading(false);
     };
@@ -134,16 +134,16 @@ export default function DashboardPage() {
           <div className="p-10 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col justify-between">
             <Shield className="text-forge-green opacity-50" size={24} />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted mb-1">Staked</p>
-              <p className="text-3xl font-bold">${profile?.total_staked || 0}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted mb-1">Completed</p>
+              <p className="text-3xl font-bold">{profile?.completed_goals || 0}</p>
             </div>
           </div>
 
           <div className="p-10 rounded-[3rem] bg-white/[0.02] border border-white/5 flex flex-col justify-between">
             <Zap className="text-forge-amber opacity-50" size={24} />
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted mb-1">Buffer Days</p>
-              <p className="text-3xl font-bold">{profile?.buffer_days || 0}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted mb-1">Streak</p>
+              <p className="text-3xl font-bold">{profile?.streak_days || 0}d</p>
             </div>
           </div>
         </section>
@@ -180,28 +180,31 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group"
+                className="group cursor-pointer"
+                onClick={() => router.push(`/dashboard/goals/${forge.id}`)}
               >
-                <div className="flex justify-between items-start mb-8">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted">{forge.category}</p>
-                    <h3 className="text-lg font-bold">{forge.title}</h3>
+                <div className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all h-full">
+                  <div className="flex justify-between items-start mb-8">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-forge-muted">{forge.category}</p>
+                      <h3 className="text-lg font-bold group-hover:text-forge-amber transition-colors">{forge.title}</h3>
+                    </div>
+                    <button className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
+                      <MoreVertical size={16} />
+                    </button>
                   </div>
-                  <button className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-white/5 transition-colors">
-                    <MoreVertical size={16} />
-                  </button>
-                </div>
 
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Clock size={14} className="text-forge-muted" />
-                    <span className="text-xs font-medium text-forge-muted">Day 1 of {forge.duration_days}</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-forge-muted" />
+                      <span className="text-xs font-medium text-forge-muted">Day 1 of {forge.duration_days}</span>
+                    </div>
+                    <span className="text-xs font-bold text-white">{forge.stake_amount}</span>
                   </div>
-                  <span className="text-xs font-bold text-white">{forge.stake}</span>
-                </div>
 
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                   <div className="h-full bg-forge-amber w-[2%]" />
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-forge-amber w-[2%] transition-all group-hover:w-[5%]" />
+                  </div>
                 </div>
               </motion.div>
             ))}
