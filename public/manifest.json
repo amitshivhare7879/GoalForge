@@ -1,0 +1,16 @@
+{
+  "name": "GoalForge",
+  "short_name": "GoalForge",
+  "description": "Premium Discipline Architect & Accountability Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030303",
+  "theme_color": "#FF8C00",
+  "icons": [
+    {
+      "src": "/globe.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

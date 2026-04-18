@@ -3,11 +3,13 @@ CREATE TABLE IF NOT EXISTS public.forges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    category TEXT NOT NULL, -- e.g., 'Coding', 'Fitness', 'Focus'
+    category TEXT NOT NULL,
     duration_days INT NOT NULL,
-    difficulty_curve JSONB NOT NULL, -- Stores the AI-generated curve data
-    stake TEXT DEFAULT '$0',
-    status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Forged', 'Broken')),
+    difficulty_curve JSONB NOT NULL,
+    tasks JSONB, 
+    stake TEXT DEFAULT '₹500',
+    completed_days INT[] DEFAULT '{}',
+    status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Forged', 'Broken', 'active')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Flame, Send, Cpu, CheckCircle2 } from 'lucide-react';
+import { Flame, Send, Cpu, CheckCircle2, Shield } from 'lucide-react';
 import { ForgeButton } from '@/components/ForgeButton';
 import ReactMarkdown from 'react-markdown';
 import { 
@@ -30,13 +30,16 @@ export default function PathfinderPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const [extractedData, setExtractedData] = useState<any>(null);
+  const [customStake, setCustomStake] = useState('');
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, extractedData]);
+    if (extractedData?.stake && !customStake) {
+      setCustomStake(extractedData.stake);
+    }
+  }, [messages, extractedData, customStake]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -58,18 +61,25 @@ export default function PathfinderPage() {
       if (data.text) {
         let text = data.text;
         
-        // Check for JSON block
-        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+        // Check for JSON block (supports 3 or 4 backticks)
+        const jsonMatch = text.match(/`{3,4}json\n([\s\S]*?)\n`{3,4}/);
         if (jsonMatch) {
           try {
-            const parsed = JSON.parse(jsonMatch[1]);
+            let jsonString = jsonMatch[1]
+              .replace(/\[\s*\.\.\.\s*\]/g, '[]')
+              .replace(/\.\.\./g, '')
+              .trim();
+              
+            // Remove trailing commas before ] or }
+            jsonString = jsonString.replace(/,\s*([\]}])/g, '$1');
+
+            const parsed = JSON.parse(jsonString);
             if (parsed.is_final) {
               setExtractedData(parsed);
-              // Remove JSON block from the readable chat
-              text = text.replace(/```json\n([\s\S]*?)\n```/, '').trim();
+              setCustomStake(parsed.stake || '₹500');
             }
           } catch (e) {
-            console.error("Failed to parse extracted JSON:", e);
+            console.error("Failed to parse extracted JSON:", e, jsonMatch[1]);
           }
         }
         
@@ -94,18 +104,20 @@ export default function PathfinderPage() {
       return;
     }
 
-    const { error } = await supabase.from('goals').insert({
+    const { error } = await supabase.from('forges').insert({
       user_id: user.id,
-      title: extractedData.title,
-      category: extractedData.category,
+      title: extractedData.title || "Untitled Forge",
+      category: extractedData.category || "Discipline",
       duration_days: parseInt(extractedData.duration_days) || 30,
       difficulty_curve: extractedData.curve,
-      stake_amount: '$200', // Default for MVP
-      status: 'active'
+      tasks: extractedData.tasks,
+      stake: customStake || extractedData.stake || '₹500', 
+      status: 'Active'
     });
 
     if (error) {
-      console.error("Initiation failed", error);
+      console.error("Initiation failed:", error.message, error.details);
+      alert(`Forge Initiation Failed: ${error.message}. Please ensure the 'forges' table exists and contains a 'tasks' JSONB column.`);
       setIsSubmitting(false);
     } else {
       router.push('/dashboard');
@@ -152,7 +164,19 @@ export default function PathfinderPage() {
                 {m.role === 'user' ? (
                   <p className="font-medium text-black text-[15px]">{m.content}</p>
                 ) : (
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                  <>
+                    <ReactMarkdown>{m.content.replace(/`{3,4}json\n([\s\S]*?)\n`{3,4}/, '').trim()}</ReactMarkdown>
+                    {m.content.match(/`{3,4}json\n([\s\S]*?)\n`{3,4}/) && (
+                      <div className="mt-4 p-6 rounded-2xl bg-forge-amber/5 border border-forge-amber/20">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Shield size={16} className="text-forge-amber" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-forge-amber">Protocol Summary Architected</span>
+                        </div>
+                        <p className="text-sm font-bold text-white mb-1">Schedule & Stake defined. Ready for verification.</p>
+                        <p className="text-[10px] text-forge-muted">The technical roadmap has been buffered below.</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </motion.div>
@@ -186,7 +210,7 @@ export default function PathfinderPage() {
 
                 <div className="h-64 w-full relative z-10 bg-black/40 rounded-[2rem] border border-white/5 p-6">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={extractedData.curve}>
+                    <AreaChart data={Array.isArray(extractedData.curve) ? extractedData.curve : []}>
                       <defs>
                         <linearGradient id="colorInt" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#FF8C00" stopOpacity={0.4}/>
@@ -226,8 +250,41 @@ export default function PathfinderPage() {
                     <span className="text-2xl font-black">{extractedData.duration_days} Days</span>
                   </div>
                   <div className="p-5 rounded-3xl bg-black/40 border border-white/5 flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-forge-muted uppercase tracking-widest mb-1">Category</span>
-                    <span className="text-2xl font-black text-forge-amber">{extractedData.category}</span>
+                    <span className="text-[10px] font-bold text-forge-muted uppercase tracking-widest mb-1">Financial Stake</span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-forge-amber font-bold text-lg">₹</span>
+                      <input 
+                        type="text" 
+                        value={customStake}
+                        onChange={(e) => setCustomStake(e.target.value)}
+                        className="bg-transparent border-none text-2xl font-black text-white w-24 outline-none focus:ring-0 focus:border-forge-amber transition-all"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Task Breakdown Section */}
+                <div className="relative z-10 space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-forge-amber" />
+                      <h4 className="text-sm font-bold uppercase tracking-widest">Architected Schedule</h4>
+                    </div>
+                    <span className="text-[10px] font-bold text-forge-muted">{extractedData.tasks?.length} steps</span>
+                  </div>
+                  
+                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+                    {extractedData.tasks?.map((t: any, idx: number) => (
+                      <div key={idx} className="flex gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
+                        <div className="h-8 w-8 shrink-0 rounded-lg bg-forge-amber/5 border border-forge-amber/10 flex items-center justify-center">
+                          <span className="text-[11px] font-black text-forge-amber">{t.day}</span>
+                        </div>
+                        <div className="flex-1 flex items-center">
+                          <p className="text-[13px] font-medium text-forge-muted group-hover:text-white transition-colors">{t.task}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
