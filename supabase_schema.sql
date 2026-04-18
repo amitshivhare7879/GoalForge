@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.forges (
     tasks JSONB, 
     stake TEXT DEFAULT '₹500',
     completed_days INT[] DEFAULT '{}',
+    buffer_days_used INT DEFAULT 0,
     status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Forged', 'Broken', 'active')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -30,6 +31,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     forge_score INT DEFAULT 0,
     buffer_days INT DEFAULT 2,
     total_staked NUMERIC DEFAULT 0,
+    github_handle TEXT,
+    hashnode_handle TEXT,
+    linkedin_handle TEXT,
+    twitter_handle TEXT,
+    leetcode_handle TEXT,
+    location JSONB,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

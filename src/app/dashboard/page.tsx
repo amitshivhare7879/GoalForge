@@ -12,13 +12,17 @@ import {
   Zap, 
   Shield, 
   Activity,
+  Cpu,
   PlusCircle,
   Clock,
   MoreVertical,
-  Calendar
+  Calendar,
+  Bell,
+  MapPin,
+  Smartphone
 } from 'lucide-react';
 import { ForgeButton } from '@/components/ForgeButton';
-import { NotificationManager } from '@/components/NotificationManager';
+import { NotificationManager, sendNotification } from '@/components/NotificationManager';
 
 interface Forge {
   id: string;
@@ -27,6 +31,7 @@ interface Forge {
   duration_days: number;
   stake_amount: string;
   status: string;
+  buffer_days_used: number;
   created_at: string;
 }
 
@@ -45,7 +50,17 @@ export default function DashboardPage() {
   const [forges, setForges] = useState<Forge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [view, setView] = useState<'goals' | 'calendar'>('goals');
+  const [view, setView] = useState<'goals' | 'calendar' | 'settings'>('goals');
+  const [handles, setHandles] = useState({
+    github: '',
+    hashnode: '',
+    linkedin: '',
+    twitter: '',
+    leetcode: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationHistory, setNotificationHistory] = useState<{title: string, body: string, time: string}[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,16 +71,25 @@ export default function DashboardPage() {
       }
       setUser(user);
 
-      // Fetch Profile (from 'profiles' table - fixed from 'users')
+      // Fetch Profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
       
-      if (profileData) setProfile(profileData);
+      if (profileData) {
+        setProfile(profileData);
+        setHandles({
+          github: profileData.github_handle || '',
+          hashnode: profileData.hashnode_handle || '',
+          linkedin: profileData.linkedin_handle || '',
+          twitter: profileData.twitter_handle || '',
+          leetcode: profileData.leetcode_handle || ''
+        });
+      }
 
-      // Fetch Goals (from 'forges' table)
+      // Fetch Goals
       const { data: goalData } = await supabase
         .from('forges')
         .select('*')
@@ -77,8 +101,62 @@ export default function DashboardPage() {
       setIsLoading(false);
     };
 
+    const handleSignal = (e: any) => {
+      setNotificationHistory(prev => [{
+        title: e.detail.title,
+        body: e.detail.body,
+        time: e.detail.time
+      }, ...prev].slice(0, 10));
+    };
+
+    window.addEventListener('forge-signal', handleSignal);
     fetchData();
+
+    return () => window.removeEventListener('forge-signal', handleSignal);
   }, [router, supabase]);
+
+  const handleSaveSettings = async () => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          github_handle: handles.github,
+          hashnode_handle: handles.hashnode,
+          linkedin_handle: handles.linkedin,
+          twitter_handle: handles.twitter,
+          leetcode_handle: handles.leetcode,
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      // Verification Step: Refetch to ensure it's in the DB
+      const { data: verifiedData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (verifiedData) {
+        setHandles({
+          github: verifiedData.github_handle || '',
+          hashnode: verifiedData.hashnode_handle || '',
+          linkedin: verifiedData.linkedin_handle || '',
+          twitter: verifiedData.twitter_handle || '',
+          leetcode: verifiedData.leetcode_handle || ''
+        });
+      }
+
+      sendNotification('Integrations Secured', 'Auto-verification protocols are now armed and verified.');
+    } catch (err: any) {
+      console.error('Settings save error:', err);
+      sendNotification('Save Failed', err.message || 'System refusal. Check connection.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -102,17 +180,49 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#030303] text-white font-sans">
       <NotificationManager />
-      {/* ─── Header ─── */}
+      {/* Header */}
       <nav className="border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-forge-amber flex items-center justify-center">
+          <div className="flex items-center gap-6">
+            <div className="h-8 w-8 rounded-lg bg-forge-amber flex items-center justify-center" suppressHydrationWarning>
               <Flame size={18} className="text-black" fill="currentColor" />
             </div>
             <span className="font-display font-bold text-lg tracking-tight">GoalForge</span>
           </div>
 
           <div className="flex items-center gap-6">
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 rounded-full hover:bg-white/5 transition-colors relative"
+              >
+                <Bell size={20} className="text-forge-muted" />
+                {notificationHistory.length > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-forge-amber rounded-full" />
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-4 w-80 rounded-3xl bg-[#0a0a0a] border border-white/10 p-6 z-[100] shadow-2xl">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-sm font-bold uppercase tracking-widest">Protocol Alerts</h4>
+                  </div>
+                  <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                    {notificationHistory.length === 0 ? (
+                      <p className="text-xs text-forge-muted text-center py-8 italic">No signals detected.</p>
+                    ) : (
+                      notificationHistory.map((n, i) => (
+                        <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                          <p className="text-xs font-bold text-forge-amber mb-1">{n.title}</p>
+                          <p className="text-[10px] text-forge-muted leading-relaxed">{n.body}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="hidden md:flex bg-white/5 rounded-full p-1 border border-white/10">
               <button 
                 onClick={() => setView('goals')}
@@ -125,6 +235,12 @@ export default function DashboardPage() {
                 className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${view === 'calendar' ? 'bg-forge-amber text-black' : 'text-forge-muted hover:text-white'}`}
               >
                 Calendar
+              </button>
+              <button 
+                onClick={() => setView('settings')}
+                className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${view === 'settings' ? 'bg-forge-amber text-black' : 'text-forge-muted hover:text-white'}`}
+              >
+                <Settings size={14} />
               </button>
             </div>
             <button 
@@ -141,7 +257,7 @@ export default function DashboardPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* ─── Profile Stats ─── */}
+        {/* Active Protocols */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -227,6 +343,13 @@ export default function DashboardPage() {
                         <span className="text-xs font-bold text-forge-amber">{forge.stake || '₹500'}</span>
                       </div>
 
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-[10px] text-forge-muted uppercase tracking-widest font-black">Buffer Status</p>
+                        <p className={`text-[10px] font-black uppercase tracking-widest ${forge.buffer_days_used > 0 ? 'text-forge-amber' : 'text-forge-green hover:opacity-50'}`}>
+                          {forge.buffer_days_used || 0} Days Used
+                        </p>
+                      </div>
+
                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
@@ -240,7 +363,7 @@ export default function DashboardPage() {
               </section>
             )}
           </>
-        ) : (
+        ) : view === 'calendar' ? (
           <section className="space-y-8">
             <h2 className="text-2xl font-bold italic tracking-tight uppercase">Commitment Calendar</h2>
             <div className="p-10 rounded-[3rem] bg-white/[0.02] border border-white/5">
@@ -248,22 +371,89 @@ export default function DashboardPage() {
                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
                    <div key={d} className="text-center text-[10px] font-bold uppercase tracking-widest text-forge-muted">{d}</div>
                  ))}
-                 {Array.from({ length: 31 }).map((_, i) => {
-                    const day = i + 1;
-                    const isToday = day === new Date().getDate();
+                 {Array.from({ length: 7 }).map((_, i) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - 3 + i); 
+                    const isToday = i === 3;
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    // Find tasks for this date from all active forges
+                    const daysTasks: {goal: string, task: string, color: string}[] = [];
+                    forges.forEach(f => {
+                       const start = new Date(f.created_at);
+                       const diff = Math.ceil(Math.abs(date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+                       const taskObj = (f as any).tasks?.find((t: any) => t.day === diff);
+                       if (taskObj) {
+                         daysTasks.push({ goal: f.title, task: taskObj.task, color: 'bg-forge-amber/20 text-forge-amber' });
+                       }
+                    });
+
                     return (
-                      <div key={i} className={`h-24 rounded-2xl border transition-all flex flex-col p-3 ${isToday ? 'bg-forge-amber/10 border-forge-amber/30' : 'bg-black/40 border-white/5'}`}>
-                        <span className={`text-xs font-bold ${isToday ? 'text-forge-amber' : 'text-forge-muted'}`}>{day}</span>
-                        <div className="mt-auto space-y-1">
-                          {forges.slice(0, 2).map((f: any) => (
-                            <div key={f.id} className="h-1 w-full bg-forge-amber rounded-full opacity-50" />
-                          ))}
+                      <div key={i} className={`h-40 rounded-3xl border transition-all flex flex-col p-4 overflow-hidden ${isToday ? 'bg-forge-amber/10 border-forge-amber/30' : 'bg-black/40 border-white/5'}`}>
+                        <div className="flex justify-between items-center mb-2">
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-forge-amber' : 'text-forge-muted'}`}>
+                            {date.toLocaleDateString('en-US', { weekday: 'short' })} {date.getDate()}
+                          </span>
+                          {isToday && <span className="h-1.5 w-1.5 rounded-full bg-forge-amber" />}
+                        </div>
+                        <div className="space-y-2 overflow-y-auto custom-scrollbar flex-1 pr-1">
+                          {daysTasks.length === 0 ? (
+                            <div className="h-full flex items-center justify-center">
+                               <p className="text-[10px] text-forge-muted/30 italic">Clear</p>
+                            </div>
+                          ) : (
+                            daysTasks.map((t, idx) => (
+                              <div key={idx} className={`p-2 rounded-xl border border-white/5 bg-white/5 text-[9px] font-medium leading-tight`}>
+                                <span className="text-forge-amber font-bold block mb-1 truncate">{t.goal}</span>
+                                {t.task}
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     );
                  })}
                </div>
                <p className="text-center text-xs text-forge-muted">Heatmap reflects daily commitment density across all active protocols.</p>
+            </div>
+          </section>
+        ) : (
+          <section className="space-y-12">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold italic tracking-tight uppercase">Verification Gateways</h2>
+              <ForgeButton onClick={handleSaveSettings} isLoading={isSaving} className="px-8">
+                Save Integrations
+              </ForgeButton>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { id: 'github', label: 'GitHub Handle', desc: 'Auto-verify coding commits & PRs', icon: <Cpu size={20} />, placeholder: 'e.g. amitshivhare' },
+                { id: 'hashnode', label: 'Hashnode Handle', desc: 'Auto-verify blog posts & writing', icon: <Activity size={20} />, placeholder: 'e.g. amit' },
+                { id: 'linkedin', label: 'LinkedIn URL', desc: 'Verify professional visibility', icon: <Shield size={20} />, placeholder: 'e.g. linkedin.com/in/amit' },
+                { id: 'twitter', label: 'Twitter Handle', desc: 'Verify public accountability posts', icon: <Zap size={20} />, placeholder: 'e.g. @amit' },
+                { id: 'leetcode', label: 'LeetCode Username', desc: 'Auto-verify daily problem solving', icon: <Flame size={20} />, placeholder: 'e.g. amit_99' },
+                { id: 'location', label: 'Target Location', desc: 'Verify you were at a specific spot', icon: <MapPin size={20} />, placeholder: 'e.g. Gym, Office' }
+              ].map((platform) => (
+                <div key={platform.id} className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 group hover:border-white/10 transition-all">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center text-forge-muted group-hover:bg-forge-amber/10 group-hover:text-forge-amber transition-all">
+                      {platform.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold">{platform.label}</h4>
+                      <p className="text-[10px] text-forge-muted uppercase tracking-widest">{platform.desc}</p>
+                    </div>
+                  </div>
+                  <input 
+                    type="text" 
+                    value={(handles as any)[platform.id]}
+                    onChange={(e) => setHandles({ ...handles, [platform.id]: e.target.value })}
+                    placeholder={platform.placeholder}
+                    className="w-full h-14 bg-black/40 border border-white/10 rounded-2xl px-6 text-sm outline-none focus:border-forge-amber/50 transition-all font-medium"
+                  />
+                </div>
+              ))}
             </div>
           </section>
         )}

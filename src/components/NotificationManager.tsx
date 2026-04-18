@@ -22,5 +22,12 @@ export const sendNotification = (title: string, body: string) => {
         icon: '/favicon.ico', // Update with your logo path
       });
     }
+
+    // Dispatch custom event for in-app UI tracking
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('forge-signal', { 
+        detail: { title, body, time: new Date().toLocaleTimeString() } 
+      }));
+    }
   }
 };

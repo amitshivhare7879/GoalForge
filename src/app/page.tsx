@@ -10,16 +10,16 @@ import { ThreeDCard } from '@/components/ThreeDCard';
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-[#030303] text-[#f5f5f7] font-sans selection:bg-forge-amber/50">
-      {/* ─── Ambient Background ─── */}
+      {/* Ambient Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 h-[600px] w-[800px] rounded-full bg-forge-amber/10 blur-[160px] opacity-40" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-100" />
       </div>
 
-      {/* ─── Minimalist Header ─── */}
+      {/* Minimalist Header */}
       <header className="relative z-50 flex items-center justify-between px-8 py-10 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-forge-amber flex items-center justify-center">
+          <div className="h-8 w-8 rounded-lg bg-forge-amber flex items-center justify-center" suppressHydrationWarning>
             <Flame size={18} className="text-black" fill="currentColor" />
           </div>
           <span className="font-display text-xl font-bold tracking-tight">GoalForge</span>
@@ -44,7 +44,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ─── Hero Section ─── */}
+      {/* Hero Section */}
       <main className="relative z-10 max-w-7xl mx-auto px-8 pt-20 pb-40">
         <div className="flex flex-col items-center text-center space-y-8">
           <motion.div
@@ -149,7 +149,7 @@ export default function Home() {
         </motion.div>
       </main>
 
-      {/* ─── Features (Grid) ─── */}
+      {/* Features */}
       <section id="features" className="max-w-7xl mx-auto px-8 py-40">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
@@ -170,7 +170,7 @@ export default function Home() {
             }
           ].map((f, i) => (
             <div key={i} className="group p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500">
-              <div className="mb-8 w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-forge-amber group-hover:scale-110 transition-transform duration-500">
+              <div className="mb-8 w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-forge-amber group-hover:scale-110 transition-transform duration-500" suppressHydrationWarning>
                 {f.icon}
               </div>
               <h3 className="text-xl font-bold mb-3">{f.title}</h3>
