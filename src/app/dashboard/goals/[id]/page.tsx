@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ChevronLeft, Flame, Zap, Shield, Clock, Calendar, Bell, Camera } from 'lucide-react';
+import { ChevronLeft, Flame, Zap, Shield, Clock, Calendar, Bell, Camera, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, Tooltip, ResponsiveContainer 
@@ -402,6 +402,7 @@ export default function GoalDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
         </div>
       </main>
     </div>

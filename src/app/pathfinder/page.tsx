@@ -165,8 +165,12 @@ export default function PathfinderPage() {
                   <p className="font-medium text-black text-[15px]">{m.content}</p>
                 ) : (
                   <>
-                    <ReactMarkdown>{m.content.replace(/`{3,4}json\n([\s\S]*?)\n`{3,4}/, '').trim()}</ReactMarkdown>
-                    {m.content.match(/`{3,4}json\n([\s\S]*?)\n`{3,4}/) && (
+                    <ReactMarkdown>
+                      {m.content.includes('```json') 
+                        ? m.content.split('```json')[0].trim() 
+                        : m.content}
+                    </ReactMarkdown>
+                    {m.content.includes('```json') && (
                       <div className="mt-4 p-6 rounded-2xl bg-forge-amber/5 border border-forge-amber/20">
                         <div className="flex items-center gap-2 mb-3">
                           <Shield size={16} className="text-forge-amber" />
