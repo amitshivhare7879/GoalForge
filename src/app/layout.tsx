@@ -24,7 +24,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "GoalForge — Stop Dreaming. Start Forging.",
-  description: "AI-powered accountability",
+  description: "A next-generation accountability platform to turn your goals into tempered steel.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -33,8 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <body className={`${dmSans.variable} ${dmSerifDisplay.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body
+        className={`${dmSans.variable} ${dmSerifDisplay.variable} ${jetbrainsMono.variable} w-full min-h-full`}
+        suppressHydrationWarning
+      >
         <div id="notif-wrap"></div>
         {children}
       </body>
