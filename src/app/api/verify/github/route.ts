@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role to bypass RLS for verification
 );
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth check: verify user session
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    );
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { forge_id } = await req.json();
 
     // 1. Fetch Forge
-    const { data: forge, error: forgeError } = await supabase
+    const { data: forge, error: forgeError } = await supabaseAdmin
       .from('forges')
       .select('*')
       .eq('id', forge_id)
@@ -22,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Fetch User Profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('github_handle')
       .eq('id', forge.user_id)
@@ -60,7 +74,7 @@ export async function POST(req: NextRequest) {
       if (!completedDays.includes(currentDay)) {
         completedDays.push(currentDay);
 
-        await supabase
+        await supabaseAdmin
           .from('forges')
           .update({ completed_days: completedDays })
           .eq('id', forge_id);

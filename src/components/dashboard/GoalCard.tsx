@@ -10,11 +10,11 @@ export function GoalCard({ goal }: { goal: Goal }) {
   const router = useRouter();
 
   const getBadgeVariant = (category: string) => {
-    switch(category.toLowerCase()) {
+    switch(category?.toLowerCase()) {
       case 'skill': return 'amber';
       case 'build': return 'steel';
       case 'fitness': return 'green';
-      default: return 'ghost';
+      default: return 'amber';
     }
   };
 

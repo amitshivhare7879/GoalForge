@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth check: verify user session
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    );
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { forge_id, type } = await req.json();
 
     // 1. Fetch Forge and User Profile
-    const { data: forge, error: forgeError } = await supabase
+    const { data: forge, error: forgeError } = await supabaseAdmin
       .from('forges')
       .select('*')
       .eq('id', forge_id)
@@ -19,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     if (forgeError || !forge) return NextResponse.json({ error: "Forge not found" }, { status: 404 });
 
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('id', forge.user_id)
@@ -90,7 +104,7 @@ export async function POST(req: NextRequest) {
       let completedDays = forge.completed_days || [];
       if (!completedDays.includes(currentDay)) {
         completedDays.push(currentDay);
-        await supabase.from('forges').update({ completed_days: completedDays }).eq('id', forge_id);
+        await supabaseAdmin.from('forges').update({ completed_days: completedDays }).eq('id', forge_id);
       }
       return NextResponse.json({ success: true, verified: true, day: currentDay, message });
     }

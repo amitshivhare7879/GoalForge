@@ -168,8 +168,23 @@ JSON FORMAT (output only after user confirms — wrap in triple backticks)
 \`\`\`
 `;
 
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
 export async function POST(req: NextRequest) {
   try {
+    // Auth check: verify user session
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll() } }
+    );
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { messages } = await req.json();
 
     if (!process.env.HUGGINGFACE_API_KEY) {

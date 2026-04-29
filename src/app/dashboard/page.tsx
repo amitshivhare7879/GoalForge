@@ -2,168 +2,170 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Zap, LogOut, Plus } from 'lucide-react';
-import { Button } from '@/components/shared/Button';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { GoalCard } from '@/components/dashboard/GoalCard';
-import { VerificationCard } from '@/components/dashboard/VerificationCard';
-import { StatsHeader } from '@/components/dashboard/StatsHeader';
-import { Goal, UserStats, Verification } from '@/types';
+import { Plus, Flame, Target, TrendingUp, ShieldCheck } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [forges, setForges] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [verifications, setVerifications] = useState<Verification[]>([]);
 
   useEffect(() => {
-    // In a real app, this would fetch from /api/dashboard/stats and /api/goals
-    // Mocking for the prototype conversion
     const fetchData = async () => {
-      try {
-        // Mock data
-        setStats({
-          activeGoals: 3,
-          forgeScore: 847,
-          weekProgress: 88,
-        });
-        
-        setGoals([
-          {
-            id: '1',
-            title: 'Ship GoalForge MVP',
-            description: 'Complete the Next.js migration and Supabase integration.',
-            category: 'Build',
-            progress: 65,
-            status: 'active',
-            days: 30,
-            stake: '₹5,000',
-            curve: []
-          },
-          {
-            id: '2',
-            title: 'Deep Work Sprint',
-            description: '3 hours of deep work daily, verified by wakatime.',
-            category: 'Habit',
-            progress: 80,
-            status: 'active',
-            days: 14,
-            stake: '₹1,000',
-            curve: []
-          }
-        ]);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/login'); return; }
+      setUser(user);
 
-        setVerifications([
-          { id: 'v1', goalId: '1', service: 'github', status: 'connected', lastSync: '10 mins ago' },
-          { id: 'v2', goalId: '2', service: 'calendar', status: 'connected', lastSync: '1 hr ago' },
-        ]);
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
-        setIsLoading(false);
-      }
+      const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profileData) setProfile(profileData);
+
+      const { data: forgesData } = await supabase.from('forges').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      if (forgesData) setForges(forgesData);
+
+      setIsLoading(false);
     };
-
     fetchData();
-  }, []);
+  }, [supabase, router]);
 
-  if (isLoading) {
-    return <LoadingSpinner fullScreen />;
-  }
+  const activeGoals = forges.filter(f => f.status === 'Active');
+  const completedGoals = forges.filter(f => f.status === 'Forged');
+  const totalStake = forges.reduce((sum, f) => sum + (parseFloat(f.stake) || 0), 0);
+  const forgeScore = profile?.forge_score || 0;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Forger';
+
+  if (isLoading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: 'var(--text3)' }}>Loading dashboard...</div>;
 
   return (
-    <div id="page-dash" className="page active">
-      {/* SIDEBAR */}
-      <aside className="sidebar fixed h-screen hidden md:flex flex-col">
-        <div className="sb-logo">
-          <div className="logo cursor-pointer" onClick={() => router.push('/')}>
-            <div className="logo-mark"><Zap style={{ width: 14, height: 14 }} /></div>
-            <span className="logo-text serif" style={{ fontSize: 16 }}>GoalForge</span>
-          </div>
+    <>
+      {/* GREETING */}
+      <div className="view-header flex-between">
+        <div>
+          <div className="view-h serif">{getGreeting()}, <em style={{ color: 'var(--amber)' }}>{firstName}.</em></div>
+          <div className="view-sub">You have {activeGoals.length} active goal{activeGoals.length !== 1 ? 's' : ''} and {completedGoals.length} completed.</div>
         </div>
+        <button className="btn btn-amber" onClick={() => router.push('/dashboard/pathfinder')}>
+          <Plus size={16} /> Forge new goal
+        </button>
+      </div>
 
-        <div className="sb-section mt-4">
-          <div className="sb-section-lbl">Menu</div>
-          <div className="nav-item active">
-            <Zap className="nav-icon" /> Dashboard
-          </div>
-          <div className="nav-item" onClick={() => router.push('/pathfinder')}>
-            <Plus className="nav-icon" /> New Goal
-          </div>
+      {/* STAT CARDS */}
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-card-lbl">Active Goals</div>
+          <div className="stat-card-val serif" style={{ color: 'var(--amber)' }}>{activeGoals.length}</div>
+          <div className="stat-card-sub up">tracking</div>
         </div>
+        <div className="stat-card">
+          <div className="stat-card-lbl">Completed</div>
+          <div className="stat-card-val serif" style={{ color: 'var(--green)' }}>{completedGoals.length}</div>
+          <div className="stat-card-sub">lifetime</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-lbl">Stake Locked</div>
+          <div className="stat-card-val serif">₹{totalStake.toLocaleString()}</div>
+          <div className="stat-card-sub">total committed</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-lbl">Forge Score</div>
+          <div className="stat-card-val serif" style={{ color: 'var(--amber)' }}>{forgeScore}</div>
+          <div className="stat-card-sub">discipline rating</div>
+        </div>
+      </div>
 
-        <div className="sb-bottom mt-auto mb-4">
-          <div className="sb-user" onClick={() => router.push('/settings')}>
-            <div className="sb-avatar">AV</div>
-            <div>
-              <div className="sb-user-name">Aman Verma</div>
-              <div className="sb-user-role">Settings</div>
+      {/* TWO COLUMN GRID */}
+      <div className="dash-grid">
+        {/* ACTIVE GOALS */}
+        <div>
+          <div className="card">
+            <div className="flex-between" style={{ marginBottom: 16 }}>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>Active goals</span>
+              <span className="badge badge-amber">{activeGoals.length} live</span>
+            </div>
+            <div className="goal-list">
+              {activeGoals.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text3)' }}>
+                  No active goals yet. Start forging!
+                </div>
+              ) : (
+                activeGoals.map(forge => {
+                  const daysActive = Math.ceil(Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) / (1000 * 60 * 60 * 24)) || 1;
+                  const progress = Math.round((Math.min(daysActive, forge.duration_days) / forge.duration_days) * 100) || 2;
+                  return (
+                    <div key={forge.id} className="goal-card">
+                      <div className="goal-card-header">
+                        <div>
+                          <div className="goal-card-title">{forge.title}</div>
+                          <div className="goal-card-meta">{forge.category} · Day {daysActive} of {forge.duration_days}</div>
+                        </div>
+                        <span className="badge badge-amber">{forge.category?.toUpperCase()}</span>
+                      </div>
+                      <div className="prog-track"><div className="prog-fill prog-amber" style={{ width: `${progress}%` }}></div></div>
+                      <div className="goal-card-footer">
+                        <span className="goal-prog-label">{progress}% complete · {Math.max(0, forge.duration_days - daysActive)} days left</span>
+                        <span className="goal-prog-val">₹{forge.stake || 0} staked</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-          <div className="sb-user mt-2 text-red-400" onClick={() => router.push('/login')}>
-            <LogOut size={16} className="mr-2" /> Sign out
-          </div>
-        </div>
-      </aside>
-
-      {/* MAIN CONTENT */}
-      <div className="main-content md:ml-[260px]">
-        <div className="topbar">
-          <div className="topbar-left">
-            <h1 className="topbar-title">Dashboard</h1>
-          </div>
-          <div className="topbar-right">
-            <Button variant="amber" size="sm" onClick={() => router.push('/pathfinder')}>
-              + New Forge
-            </Button>
-          </div>
         </div>
 
-        <div className="page-body">
-          <div className="view-header">
-            <h2 className="view-h">Overview</h2>
-            <p className="view-sub">Your current discipline metrics and active commitments.</p>
-          </div>
-
-          {stats && <StatsHeader stats={stats} />}
-
-          <div className="dash-grid">
-            {/* GOALS COLUMN */}
-            <div>
-              <div className="mb-4 font-semibold">Active Forges</div>
-              <div className="goal-list">
-                {goals.map(goal => (
-                  <GoalCard key={goal.id} goal={goal} />
-                ))}
-                {goals.length === 0 && (
-                  <div className="text-center p-8 text-text3 border border-border2 rounded-xl">
-                    No active goals. Start forging!
-                  </div>
-                )}
+        {/* RIGHT COLUMN */}
+        <div>
+          {/* FORGE SCORE RING */}
+          <div className="card" style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 8 }}>Forge Score</div>
+            <div className="forge-score-ring">
+              <svg className="forge-score-svg" width="140" height="140" viewBox="0 0 140 140">
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--surf2)" strokeWidth="8" />
+                <circle cx="70" cy="70" r="60" fill="none" stroke="var(--amber)" strokeWidth="8"
+                  strokeDasharray={`${(forgeScore / 1500) * 377} 377`} strokeLinecap="round" />
+              </svg>
+              <div className="forge-score-text">
+                <div className="forge-score-num">{forgeScore}</div>
+                <div className="forge-score-lbl">Score</div>
               </div>
             </div>
+            <div className="forge-rank-pill"><Flame size={12} /> Journeyman</div>
+          </div>
 
-            {/* VERIFICATIONS COLUMN */}
-            <div>
-              <div className="mb-4 font-semibold">Verification Gateways</div>
-              <div className="verif-grid">
-                {verifications.map(verif => (
-                  <VerificationCard key={verif.id} verification={verif} />
-                ))}
+          {/* VERIFICATION APIS */}
+          <div className="card">
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Verification APIs</div>
+            <div className="verif-grid">
+              <div className="verif-pill">
+                <div className={`verif-dot ${profile?.github_connected ? 'connected' : 'disconnected'}`}></div>
+                <div><div className="verif-name">GitHub</div><div className="verif-status">{profile?.github_connected ? 'Connected' : 'Not connected'}</div></div>
               </div>
-              <div className="mt-8 p-6 rounded-xl border border-border2 bg-surf2">
-                <h3 className="text-sm font-semibold mb-2">Need a new integration?</h3>
-                <p className="text-xs text-text2 mb-4">Connect GitHub, Health, or Calendar in your settings to unlock passive verification.</p>
-                <Button variant="surface" size="sm" fullWidth onClick={() => router.push('/settings')}>
-                  Manage Integrations
-                </Button>
+              <div className="verif-pill">
+                <div className={`verif-dot ${profile?.gcal_connected ? 'connected' : 'disconnected'}`}></div>
+                <div><div className="verif-name">Google Calendar</div><div className="verif-status">{profile?.gcal_connected ? 'Connected' : 'Not connected'}</div></div>
+              </div>
+              <div className="verif-pill">
+                <div className={`verif-dot ${profile?.gps_connected ? 'connected' : 'disconnected'}`}></div>
+                <div><div className="verif-name">GPS</div><div className="verif-status">{profile?.gps_connected ? 'Connected' : 'Not connected'}</div></div>
+              </div>
+              <div className="verif-pill">
+                <div className="verif-dot disconnected"></div>
+                <div><div className="verif-name">Health Connect</div><div className="verif-status">Not connected</div></div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
