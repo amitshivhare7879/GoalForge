@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoalForge — Stop Dreaming. Start Forging.</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+/* ── DESIGN TOKENS ── */
+:root {
+  --bg:       #0b0b0d;
+  --bg2:      #111114;
+  --bg3:      #18181c;
+  --surface:  #1e1e24;
+  --surf2:    #26262e;
+  --surf3:    #2e2e38;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --border3:  rgba(255,255,255,0.18);
+  --text:     #eeeae4;
+  --text2:    #9b9690;
+  --text3:    #4e4a45;
+  --amber:    #f5a623;
+  --amber2:   #fbbf4a;
+  --amberDim: rgba(245,166,35,0.10);
+  --amberDim2:rgba(245,166,35,0.05);
+  --steel:    #7ba3c8;
+  --steelDim: rgba(123,163,200,0.10);
+  --green:    #4db37e;
+  --greenDim: rgba(77,179,126,0.10);
+  --red:      #e05c5c;
+  --redDim:   rgba(224,92,92,0.10);
+  --r:        8px;
+  --rlg:      14px;
+  --rxl:      20px;
+  --sidebar:  260px;
+}
+
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;outline:none;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{text-decoration:none;color:inherit;}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;}
+input,textarea,select{font-family:'DM Sans',sans-serif;}
+img{display:block;max-width:100%;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surf2);border-radius:4px;}
+
+/* ── PAGE ROUTING ── */
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+
+/* ── TYPOGRAPHY ── */
+.serif{font-family:'DM Serif Display',serif;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:.85em;}
+
+/* ── LAYOUT ── */
+.container{max-width:1200px;margin:0 auto;padding:0 40px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+.flex{display:flex;align-items:center;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.flex-col{display:flex;flex-direction:column;}
+.gap4{gap:4px;} .gap8{gap:8px;} .gap12{gap:12px;} .gap16{gap:16px;} .gap24{gap:24px;}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:24px;}
+.card-sm{padding:16px;}
+.card-hover:hover{border-color:var(--border2);transition:border-color .2s;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--r);font-size:14px;font-weight:500;transition:all .18s;border:1px solid transparent;cursor:pointer;}
+.btn-amber{background:var(--amber);color:#0b0b0d;border-color:var(--amber);}
+.btn-amber:hover{background:var(--amber2);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--border2);}
+.btn-ghost:hover{background:var(--surf2);}
+.btn-surface{background:var(--surf2);color:var(--text);border-color:var(--border);}
+.btn-surface:hover{background:var(--surf3);}
+.btn-danger{background:var(--redDim);color:var(--red);border-color:rgba(224,92,92,0.2);}
+.btn-sm{padding:7px 14px;font-size:12px;}
+.btn-lg{padding:15px 36px;font-size:15px;font-weight:600;}
+.btn-full{width:100%;justify-content:center;}
+.btn-icon{padding:9px;border-radius:var(--r);background:var(--surf2);border:1px solid var(--border);color:var(--text2);transition:all .18s;}
+.btn-icon:hover{background:var(--surf3);color:var(--text);}
+
+/* ── INPUTS ── */
+.input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:11px 16px;font-size:14px;color:var(--text);transition:border .2s;}
+.input:focus{border-color:var(--amber);background:var(--surface);}
+.input::placeholder{color:var(--text3);}
+.label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.form-group{margin-bottom:20px;}
+textarea.input{resize:vertical;min-height:100px;line-height:1.6;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;}
+.badge-amber{background:var(--amberDim);color:var(--amber);}
+.badge-steel{background:var(--steelDim);color:var(--steel);}
+.badge-green{background:var(--greenDim);color:var(--green);}
+.badge-red{background:var(--redDim);color:var(--red);}
+.badge-ghost{background:rgba(255,255,255,0.06);color:var(--text2);}
+
+/* ── PROGRESS ── */
+.prog-track{height:4px;background:var(--surf2);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+.prog-amber{background:linear-gradient(90deg,var(--amber),var(--amber2));}
+.prog-steel{background:linear-gradient(90deg,var(--steel),#9fc0e0);}
+.prog-green{background:linear-gradient(90deg,var(--green),#6ed49e);}
+
+/* ── DIVIDER ── */
+hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+/* ── NOTIFICATIONS ── */
+#notif-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.notif{pointer-events:all;display:flex;align-items:flex-start;gap:12px;background:var(--surf2);border:1px solid var(--border2);border-radius:var(--rlg);padding:14px 18px;min-width:300px;max-width:360px;animation:nIn .3s ease;}
+.notif-body{flex:1;}
+.notif-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.notif-msg{font-size:12px;color:var(--text2);line-height:1.4;}
+.notif-icon{flex-shrink:0;margin-top:1px;width:16px;height:16px;}
+.notif.success{border-color:rgba(77,179,126,.25);} .notif.success .notif-icon{color:var(--green);}
+.notif.warning{border-color:rgba(245,166,35,.25);} .notif.warning .notif-icon{color:var(--amber);}
+.notif.info{border-color:rgba(123,163,200,.25);}   .notif.info .notif-icon{color:var(--steel);}
+.notif.error{border-color:rgba(224,92,92,.25);}    .notif.error .notif-icon{color:var(--red);}
+@keyframes nIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
+
+/* ══════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════ */
+#page-landing{position:relative;overflow:hidden;}
+.l-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:72px 72px;pointer-events:none;z-index:0;}
+.l-glow{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(80px);}
+.l-glow-a{width:700px;height:700px;background:radial-gradient(circle,rgba(245,166,35,.09) 0%,transparent 70%);top:-250px;right:-150px;}
+.l-glow-b{width:500px;height:500px;background:radial-gradient(circle,rgba(123,163,200,.06) 0%,transparent 70%);bottom:-150px;left:-100px;}
+
+/* landing nav */
+.l-nav{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:22px 7%;border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:30px;height:30px;background:var(--amber);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#0b0b0d;flex-shrink:0;}
+.logo-text{font-family:'DM Serif Display',serif;font-size:18px;letter-spacing:-.01em;}
+.l-nav-links{display:flex;align-items:center;gap:28px;}
+.l-nav-link{font-size:13px;color:var(--text2);transition:color .2s;cursor:pointer;}
+.l-nav-link:hover{color:var(--text);}
+
+/* hero */
+.l-hero{position:relative;z-index:5;padding:90px 7% 80px;display:grid;grid-template-columns:1.15fr .85fr;gap:60px;align-items:center;min-height:88vh;}
+.l-hero-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.l-eyebrow-line{width:28px;height:1px;background:var(--amber);}
+.l-eyebrow-text{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);}
+.l-hero-h1{font-family:'DM Serif Display',serif;font-size:68px;line-height:1.0;letter-spacing:-.03em;margin-bottom:24px;color:var(--text);}
+.l-hero-h1 em{font-style:italic;color:var(--amber);}
+.l-hero-sub{font-size:16px;color:var(--text2);line-height:1.75;max-width:500px;margin-bottom:40px;}
+.l-hero-cta{display:flex;gap:12px;}
+.l-hero-stats{display:flex;gap:36px;margin-top:52px;padding-top:32px;border-top:1px solid var(--border);}
+.l-stat-val{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);}
+.l-stat-lbl{font-size:12px;color:var(--text3);margin-top:3px;}
+
+/* hero visual */
+.l-hero-visual{position:relative;height:480px;display:flex;align-items:center;justify-content:center;}
+.forge-orb{width:240px;height:240px;border-radius:50%;border:1px solid rgba(245,166,35,.2);display:flex;align-items:center;justify-content:center;position:relative;animation:orbPulse 6s ease-in-out infinite;}
+.forge-orb::before{content:'';position:absolute;inset:-30px;border-radius:50%;border:1px solid rgba(245,166,35,.08);}
+.forge-orb::after{content:'';position:absolute;inset:-60px;border-radius:50%;border:1px solid rgba(245,166,35,.04);}
+.forge-orb-inner{width:160px;height:160px;background:var(--amberDim);border-radius:50%;border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;}
+.forge-orb-icon{color:var(--amber);width:56px;height:56px;animation:breathe 4s ease-in-out infinite;}
+.float-tag{position:absolute;background:var(--surface);border:1px solid var(--border2);border-radius:30px;padding:8px 16px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text2);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:floatY 6s ease-in-out infinite;}
+.ft1{top:12%;right:-10%;animation-delay:0s;}
+.ft2{bottom:22%;left:-10%;animation-delay:2s;}
+.ft3{top:42%;left:-18%;animation-delay:4s;}
+@keyframes orbPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,0);}50%{box-shadow:0 0 0 20px rgba(245,166,35,.05);}}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+@keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+/* features */
+.l-features{position:relative;z-index:5;padding:80px 7%;border-top:1px solid var(--border);}
+.l-section-label{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:16px;}
+.l-section-h2{font-family:'DM Serif Display',serif;font-size:40px;letter-spacing:-.02em;margin-bottom:48px;color:var(--text);}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:32px;transition:all .3s;}
+.feat-card:hover{border-color:var(--border2);transform:translateY(-4px);}
+.feat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;}
+.feat-icon-amber{background:var(--amberDim);}
+.feat-icon-steel{background:var(--steelDim);}
+.feat-icon-green{background:var(--greenDim);}
+.feat-h{font-size:16px;font-weight:600;margin-bottom:10px;}
+.feat-p{font-size:13px;color:var(--text2);line-height:1.65;}
+
+/* how it works */
+.l-how{position:relative;z-index:5;padding:80px 7%;border-top:1px solid var(--border);}
+.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:48px;}
+.how-steps::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+.how-step{text-align:center;padding:0 16px;position:relative;z-index:1;}
+.how-num{width:56px;height:56px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:20px;color:var(--amber);margin:0 auto 20px;}
+.how-step-h{font-size:14px;font-weight:600;margin-bottom:8px;}
+.how-step-p{font-size:12px;color:var(--text2);line-height:1.6;}
+
+/* dark-strip CTA */
+.l-cta{position:relative;z-index:5;margin:0 7% 80px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rxl);padding:64px;display:flex;justify-content:space-between;align-items:center;gap:40px;overflow:hidden;}
+.l-cta::before{content:'';position:absolute;width:400px;height:400px;background:radial-gradient(circle,var(--amberDim) 0%,transparent 70%);right:-100px;top:-100px;pointer-events:none;}
+.l-cta-h{font-family:'DM Serif Display',serif;font-size:36px;letter-spacing:-.02em;margin-bottom:12px;}
+.l-cta-p{font-size:14px;color:var(--text2);max-width:420px;line-height:1.6;}
+
+/* footer */
+.l-footer{position:relative;z-index:5;border-top:1px solid var(--border);padding:32px 7%;display:flex;justify-content:space-between;align-items:center;}
+.l-footer-p{font-size:12px;color:var(--text3);}
+
+/* ══════════════════════════════════════════
+   AUTH PAGE
+══════════════════════════════════════════ */
+#page-auth{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--bg);}
+#page-auth.active{display:flex;}
+.auth-bg{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:72px 72px;pointer-events:none;}
+.auth-card{position:relative;z-index:2;width:420px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rxl);padding:40px;}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:32px;}
+.auth-h{font-family:'DM Serif Display',serif;font-size:26px;text-align:center;margin-bottom:6px;}
+.auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:32px;line-height:1.5;}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
+.auth-divider-line{flex:1;height:1px;background:var(--border);}
+.auth-divider-text{font-size:11px;color:var(--text3);}
+.oauth-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.oauth-btn:hover{background:var(--surf2);border-color:var(--border2);}
+.oauth-icon{width:18px;height:18px;}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:24px;}
+.auth-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .2s;}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.auth-footer{text-align:center;font-size:12px;color:var(--text3);margin-top:20px;}
+.auth-footer a{color:var(--amber);cursor:pointer;}
+
+/* ══════════════════════════════════════════
+   DASHBOARD SHELL
+══════════════════════════════════════════ */
+#page-dash{display:none;min-height:100vh;}
+#page-dash.active{display:flex;}
+
+/* sidebar */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow-y:auto;}
+.sb-logo{padding:22px 20px;border-bottom:1px solid var(--border);}
+.sb-section{padding:12px 12px 0;}
+.sb-section-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:8px 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;margin-bottom:1px;}
+.nav-item:hover{background:var(--surf2);color:var(--text);}
+.nav-item.active{background:var(--amberDim);color:var(--amber);}
+.nav-item .nav-icon{width:16px;height:16px;flex-shrink:0;}
+.nav-item .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--amberDim);color:var(--amber);padding:2px 7px;border-radius:99px;}
+.sb-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);cursor:pointer;transition:background .2s;}
+.sb-user:hover{background:var(--surf2);}
+.sb-avatar{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--amber) 0%,var(--steel) 100%);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0b0b0d;flex-shrink:0;overflow:hidden;}
+.sb-user-name{font-size:13px;font-weight:600;}
+.sb-user-role{font-size:11px;color:var(--text3);}
+
+/* main content */
+.main-content{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:100vh;}
+
+/* top bar */
+.topbar{padding:16px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar-title{font-size:16px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;width:220px;transition:border .2s;}
+.search-box:focus-within{border-color:var(--border2);}
+.search-box input{background:none;border:none;font-size:13px;color:var(--text);width:100%;}
+.search-box input::placeholder{color:var(--text3);}
+
+/* page content */
+.page-body{padding:32px;flex:1;}
+.view{display:none;}
+.view.active{display:block;}
+.view-header{margin-bottom:28px;}
+.view-h{font-family:'DM Serif Display',serif;font-size:32px;letter-spacing:-.02em;margin-bottom:6px;}
+.view-sub{font-size:14px;color:var(--text2);}
+
+/* stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;}
+.stat-card-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.stat-card-val{font-family:'DM Serif Display',serif;font-size:32px;line-height:1;margin-bottom:6px;}
+.stat-card-sub{font-size:12px;color:var(--text2);}
+.stat-card-sub.up{color:var(--green);}
+.stat-card-sub.down{color:var(--red);}
+
+/* dashboard 2-col */
+.dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;}
+
+/* goal cards */
+.goal-list{display:flex;flex-direction:column;gap:12px;}
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;cursor:pointer;transition:all .2s;}
+.goal-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.goal-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.goal-card-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+.goal-card-meta{font-size:12px;color:var(--text2);}
+.goal-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;}
+.goal-prog-label{font-size:11px;color:var(--text3);}
+.goal-prog-val{font-size:12px;font-weight:600;color:var(--amber);}
+
+/* forge score */
+.forge-score-ring{position:relative;width:140px;height:140px;margin:0 auto;}
+.forge-score-svg{transform:rotate(-90deg);}
+.forge-score-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.forge-score-num{font-family:'DM Serif Display',serif;font-size:34px;line-height:1;}
+.forge-score-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);}
+.forge-rank-pill{display:inline-flex;align-items:center;gap:6px;background:var(--amberDim);color:var(--amber);border:1px solid rgba(245,166,35,.2);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;margin-top:12px;}
+
+/* buffer tokens */
+.buffer-tokens{display:flex;gap:8px;margin:16px 0;}
+.buffer-token{width:32px;height:32px;border-radius:50%;background:var(--amber);border:2px solid rgba(245,166,35,.4);transition:all .3s;}
+.buffer-token.used{background:var(--surf2);border-color:var(--border);}
+
+/* verification pills */
+.verif-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.verif-pill{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;}
+.verif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.verif-dot.connected{background:var(--green);}
+.verif-dot.disconnected{background:var(--surf3);}
+.verif-name{font-size:12px;font-weight:500;}
+.verif-status{font-size:11px;color:var(--text3);}
+
+/* calendar mini */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:12px;}
+.cal-day{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;font-size:11px;cursor:pointer;color:var(--text2);transition:background .2s;}
+.cal-day:hover{background:var(--surf2);}
+.cal-day.has-goal{background:var(--amberDim);color:var(--amber);font-weight:600;}
+.cal-day.today{background:var(--amber);color:#0b0b0d;font-weight:700;}
+.cal-day.past{opacity:.35;}
+.cal-head{display:flex;align-items:center;justify-content:center;height:28px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+
+/* ══════════════════════════════════════════
+   MY PLANS VIEW
+══════════════════════════════════════════ */
+.plan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:24px;cursor:pointer;transition:all .2s;}
+.plan-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.plan-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+.plan-card-title{font-size:16px;font-weight:600;margin-bottom:6px;}
+.plan-card-category{font-size:11px;color:var(--text3);}
+.plan-stake{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--amber);}
+.plan-stake-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.plan-timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin:16px 0;}
+.tl-bar{height:32px;border-radius:3px;background:var(--surf2);transition:all .3s;position:relative;}
+.tl-bar.active{background:var(--amber);opacity:.7;}
+.tl-bar.done{background:var(--green);opacity:.9;}
+.tl-bar.today{background:var(--amber);opacity:1;box-shadow:0 0 8px rgba(245,166,35,.4);}
+.plan-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.plan-days-left{font-size:13px;color:var(--text2);}
+.plan-days-left strong{color:var(--text);}
+
+/* today's tasks */
+.task-list{display:flex;flex-direction:column;gap:0;}
+.task-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);transition:all .2s;}
+.task-item:last-child{border-bottom:none;}
+.task-check{width:22px;height:22px;border:1.5px solid var(--border2);border-radius:50%;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.task-check:hover{border-color:var(--amber);}
+.task-check.done{background:var(--green);border-color:var(--green);color:#fff;}
+.task-body{flex:1;}
+.task-name{font-size:14px;font-weight:500;margin-bottom:2px;}
+.task-meta{font-size:12px;color:var(--text2);}
+.task-item.done .task-name{text-decoration:line-through;color:var(--text3);}
+.task-reward{font-size:11px;font-weight:600;color:var(--green);background:var(--greenDim);padding:3px 8px;border-radius:4px;flex-shrink:0;}
+
+/* ══════════════════════════════════════════
+   FORGE SCORE VIEW
+══════════════════════════════════════════ */
+.score-big{font-family:'DM Serif Display',serif;font-size:80px;line-height:1;color:var(--amber);text-align:center;margin:20px 0;}
+.score-rank{text-align:center;font-size:13px;color:var(--text2);margin-bottom:32px;}
+.breakdown-item{margin-bottom:16px;}
+.breakdown-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.breakdown-name{font-size:13px;font-weight:500;}
+.breakdown-val{font-size:13px;font-weight:600;color:var(--amber);}
+.rank-ladder{display:flex;flex-direction:column;gap:8px;}
+.rank-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r);border:1px solid var(--border);}
+.rank-item.current{background:var(--amberDim);border-color:rgba(245,166,35,.3);}
+.rank-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.rank-name{font-size:13px;font-weight:600;flex:1;}
+.rank-range{font-size:11px;color:var(--text3);}
+
+/* ══════════════════════════════════════════
+   SLAG HEAP VIEW
+══════════════════════════════════════════ */
+.slag-card{background:var(--surface);border:1px solid var(--redDim);border-left:3px solid var(--red);border-radius:var(--rlg);padding:20px;margin-bottom:14px;}
+.slag-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+.slag-meta{font-size:12px;color:var(--text2);margin-bottom:12px;}
+.slag-lesson{font-size:12px;color:var(--text2);background:var(--bg3);padding:10px 14px;border-radius:var(--r);line-height:1.5;}
+.slag-lesson strong{color:var(--text);}
+
+/* ══════════════════════════════════════════
+   GROUP GOALS VIEW
+══════════════════════════════════════════ */
+.pact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);padding:24px;margin-bottom:16px;}
+.pact-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.pact-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+.pact-members{font-size:12px;color:var(--text2);}
+.member-avatars{display:flex;margin-bottom:16px;}
+.member-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--steel));border:2px solid var(--bg2);margin-right:-8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0b0b0d;}
+.pact-warning{font-size:12px;color:var(--amber);background:var(--amberDim);border:1px solid rgba(245,166,35,.2);border-radius:var(--r);padding:10px 14px;margin-top:14px;display:flex;align-items:center;gap:8px;}
+
+/* ══════════════════════════════════════════
+   PATHFINDER PAGE (full page, not modal)
+══════════════════════════════════════════ */
+.pathfinder-layout{display:grid;grid-template-columns:1fr 380px;gap:0;height:calc(100vh - 57px);}
+.pf-chat{display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.pf-chat-header{padding:20px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.pf-ai-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--amber) 0%,var(--steel) 100%);display:flex;align-items:center;justify-content:center;color:#0b0b0d;flex-shrink:0;}
+.pf-chat-status{width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:auto;animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.pf-messages{flex:1;overflow-y:auto;padding:28px;}
+.pf-msg{display:flex;gap:12px;margin-bottom:24px;animation:msgIn .25s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.pf-msg.user{flex-direction:row-reverse;}
+.pf-msg-av{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.pf-msg-av.ai{background:linear-gradient(135deg,var(--amber),var(--steel));color:#0b0b0d;}
+.pf-msg-av.user{background:var(--surf2);color:var(--text2);}
+.pf-bubble{max-width:78%;padding:14px 18px;border-radius:var(--rlg);font-size:14px;line-height:1.65;}
+.pf-msg.ai .pf-bubble{background:var(--surface);border:1px solid var(--border);border-radius:4px var(--rlg) var(--rlg) var(--rlg);}
+.pf-msg.user .pf-bubble{background:var(--amberDim);border:1px solid rgba(245,166,35,.15);color:var(--text);border-radius:var(--rlg) 4px var(--rlg) var(--rlg);}
+.pf-bubble p{margin-bottom:8px;}
+.pf-bubble p:last-child{margin-bottom:0;}
+.pf-bubble .flag{display:flex;align-items:flex-start;gap:8px;background:var(--redDim);border:1px solid rgba(224,92,92,.2);border-radius:var(--r);padding:10px 14px;margin:10px 0;font-size:13px;color:var(--red);}
+.pf-bubble .flag-icon{flex-shrink:0;margin-top:1px;}
+.pf-bubble strong{color:var(--amber);}
+.pf-typing{display:flex;gap:4px;padding:6px 0;align-items:center;}
+.pf-typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:typeDot 1.2s ease-in-out infinite;}
+.pf-typing span:nth-child(2){animation-delay:.2s;}
+.pf-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes typeDot{0%,80%,100%{transform:scale(.7);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+.pf-input-area{padding:20px 28px;border-top:1px solid var(--border);}
+.pf-input-row{display:flex;gap:10px;}
+.pf-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;font-size:14px;color:var(--text);resize:none;max-height:120px;line-height:1.5;}
+.pf-input:focus{border-color:var(--border2);background:var(--surface);}
+.pf-input::placeholder{color:var(--text3);}
+.pf-send{width:42px;height:42px;border-radius:var(--r);background:var(--amber);color:#0b0b0d;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;transition:all .2s;}
+.pf-send:hover{background:var(--amber2);}
+.pf-send:disabled{background:var(--surf2);color:var(--text3);cursor:not-allowed;}
+
+/* pathfinder sidebar panel */
+.pf-panel{padding:24px;overflow-y:auto;}
+.pf-panel-section{margin-bottom:28px;}
+.pf-panel-h{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+
+/* curve viz */
+.curve-chart{height:120px;display:flex;align-items:flex-end;gap:4px;padding:0 4px;}
+.curve-bar{flex:1;border-radius:4px 4px 0 0;background:var(--surf2);transition:height .5s ease,background .3s;min-height:4px;position:relative;cursor:pointer;}
+.curve-bar:hover::after{content:attr(data-label);position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--surf3);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;}
+.curve-bar.c-amber{background:linear-gradient(to top,rgba(245,166,35,.4),rgba(245,166,35,.8));}
+.curve-bar.c-steel{background:linear-gradient(to top,rgba(123,163,200,.3),rgba(123,163,200,.7));}
+.curve-bar.c-green{background:linear-gradient(to top,rgba(77,179,126,.3),rgba(77,179,126,.7));}
+.curve-labels{display:flex;justify-content:space-between;padding:6px 4px 0;font-size:10px;color:var(--text3);}
+
+/* plan confirm card */
+.confirm-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;}
+.confirm-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.confirm-row:last-child{border-bottom:none;}
+.confirm-row-key{color:var(--text2);}
+.confirm-row-val{font-weight:600;color:var(--text);}
+.confirm-row-val.amber{color:var(--amber);}
+
+/* quick-start suggestions */
+.suggestion-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.chip{background:var(--surf2);border:1px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .2s;}
+.chip:hover{background:var(--amberDim);border-color:rgba(245,166,35,.3);color:var(--amber);}
+
+/* ══════════════════════════════════════════
+   STAKING / ESCROW VIEW
+══════════════════════════════════════════ */
+.stake-hero{text-align:center;padding:40px 0 32px;}
+.stake-amount{font-family:'DM Serif Display',serif;font-size:56px;color:var(--amber);line-height:1;}
+.stake-lbl{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-top:6px;}
+.stake-status{display:inline-flex;align-items:center;gap:6px;background:var(--greenDim);border:1px solid rgba(77,179,126,.2);color:var(--green);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;margin-top:16px;}
+.stake-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;}
+.stake-metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;text-align:center;}
+.stake-metric-val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);margin-bottom:4px;}
+.stake-metric-lbl{font-size:11px;color:var(--text3);}
+.yield-bar-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;margin-bottom:16px;}
+.yield-bar-track{height:8px;background:var(--surf2);border-radius:4px;overflow:hidden;margin:12px 0;}
+.yield-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--steel));border-radius:4px;}
+.timeline-steps{display:flex;flex-direction:column;gap:0;}
+.tl-step{display:flex;gap:16px;padding-bottom:20px;position:relative;}
+.tl-step:last-child{padding-bottom:0;}
+.tl-step::before{content:'';position:absolute;left:11px;top:28px;bottom:0;width:1px;background:var(--border);}
+.tl-step:last-child::before{display:none;}
+.tl-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;z-index:1;}
+.tl-dot.done{background:var(--greenDim);border:1px solid rgba(77,179,126,.4);color:var(--green);}
+.tl-dot.active{background:var(--amberDim);border:1px solid rgba(245,166,35,.4);color:var(--amber);}
+.tl-dot.future{background:var(--surf2);border:1px solid var(--border);color:var(--text3);}
+.tl-body{flex:1;padding-top:2px;}
+.tl-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.tl-sub{font-size:12px;color:var(--text2);}
+
+/* ══════════════════════════════════════════
+   QUENCH MODAL
+══════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rxl);width:520px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}
+.modal-title{font-size:18px;font-weight:600;}
+.modal-sub{font-size:13px;color:var(--text2);margin-top:3px;}
+.modal-body{padding:24px 28px;}
+.modal-footer{padding:20px 28px;border-top:1px solid var(--border);display:flex;gap:10px;}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;transition:color .2s;}
+.modal-close:hover{color:var(--text);}
+
+/* quench animation */
+.quench-anim{width:120px;height:120px;border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;position:relative;}
+.quench-anim.hot{background:radial-gradient(circle,rgba(245,166,35,.3),rgba(245,166,35,.05));border:2px solid rgba(245,166,35,.3);animation:quenchPulse 2s ease-in-out infinite;}
+.quench-anim.cool{background:radial-gradient(circle,rgba(123,163,200,.2),rgba(123,163,200,.05));border:2px solid rgba(123,163,200,.3);animation:none;}
+@keyframes quenchPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.2);}50%{box-shadow:0 0 0 20px rgba(245,166,35,0);}}
+.quench-icon{width:48px;height:48px;}
+.day-schedule{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.sched-item{padding:14px 16px;border:1px solid var(--border);border-radius:var(--rlg);}
+.sched-item.active{border-color:rgba(245,166,35,.4);background:var(--amberDim2);}
+.sched-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.sched-item.active .sched-label{color:var(--amber);}
+.sched-task{font-size:14px;font-weight:600;}
+.sched-status{font-size:11px;color:var(--green);margin-top:3px;}
+
+/* success state */
+.quench-success{text-align:center;padding:20px 0;}
+.quench-success-icon{width:64px;height:64px;background:var(--greenDim);border:1px solid rgba(77,179,126,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--green);}
+.quench-success-h{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px;}
+.quench-success-p{font-size:13px;color:var(--text2);}
+
+/* ══════════════════════════════════════════
+   SETTINGS VIEW
+══════════════════════════════════════════ */
+.settings-grid{display:grid;grid-template-columns:220px 1fr;gap:24px;}
+.settings-nav{display:flex;flex-direction:column;gap:2px;}
+.settings-nav-item{padding:9px 12px;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;}
+.settings-nav-item.active{background:var(--amberDim);color:var(--amber);}
+.settings-nav-item:hover:not(.active){background:var(--surf2);color:var(--text);}
+.settings-section{display:none;}
+.settings-section.active{display:block;}
+.settings-h{font-size:16px;font-weight:600;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border);}
+.settings-row:last-child{border-bottom:none;}
+.settings-row-label{font-size:14px;font-weight:500;}
+.settings-row-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+/* toggle */
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surf3);border-radius:99px;cursor:pointer;transition:background .2s;}
+.toggle input:checked + .toggle-slider{background:var(--amber);}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:transform .2s;}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE STUFF
+══════════════════════════════════════════ */
+@media(max-width:900px){
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
+  .l-hero{grid-template-columns:1fr;padding:60px 6%;}
+  .l-hero-visual{display:none;}
+  .grid3{grid-template-columns:1fr;}
+  .pathfinder-layout{grid-template-columns:1fr;}
+  .pf-panel{display:none;}
+  .settings-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ─── NOTIFICATION WRAPPER ─── -->
+<div id="notif-wrap"></div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: LANDING
+══════════════════════════════════════════ -->
+<div id="page-landing" class="page active">
+  <div class="l-grid"></div>
+  <div class="l-glow l-glow-a"></div>
+  <div class="l-glow l-glow-b"></div>
+
+  <nav class="l-nav">
+    <div class="logo">
+      <div class="logo-mark"><i data-lucide="zap" style="width:16px;height:16px;"></i></div>
+      <span class="logo-text">GoalForge</span>
+    </div>
+    <div class="l-nav-links">
+      <span class="l-nav-link" onclick="scrollTo(0,600)">How it works</span>
+      <span class="l-nav-link" onclick="scrollTo(0,1200)">Features</span>
+      <button class="btn btn-ghost btn-sm" onclick="navigate('auth')">Sign in</button>
+      <button class="btn btn-amber btn-sm" onclick="navigate('auth')">Start forging</button>
+    </div>
+  </nav>
+
+  <section class="l-hero">
+    <div>
+      <div class="l-hero-eyebrow">
+        <div class="l-eyebrow-line"></div>
+        <span class="l-eyebrow-text">AI-powered accountability</span>
+      </div>
+      <h1 class="l-hero-h1 serif">Stop Dreaming.<br><em>Start Forging.</em></h1>
+      <p class="l-hero-sub">GoalForge turns vague intentions into verifiable commitments — with AI personalization, passive API verification, and real financial skin in the game.</p>
+      <div class="l-hero-cta">
+        <button class="btn btn-amber btn-lg" onclick="navigate('auth')">
+          <i data-lucide="zap" style="width:18px;height:18px;"></i> Forge my first goal
+        </button>
+        <button class="btn btn-ghost btn-lg" onclick="navigate('dash')">See dashboard</button>
+      </div>
+      <div class="l-hero-stats">
+        <div>
+          <div class="l-stat-val serif">94%</div>
+          <div class="l-stat-lbl">completion rate vs 20% industry avg</div>
+        </div>
+        <div>
+          <div class="l-stat-val serif">₹2.1Cr</div>
+          <div class="l-stat-lbl">stakes locked and returned</div>
+        </div>
+        <div>
+          <div class="l-stat-val serif">12K+</div>
+          <div class="l-stat-lbl">goals forged</div>
+        </div>
+      </div>
+    </div>
+    <div class="l-hero-visual">
+      <div class="forge-orb">
+        <div class="forge-orb-inner">
+          <i data-lucide="award" class="forge-orb-icon"></i>
+        </div>
+      </div>
+      <div class="float-tag ft1">
+        <i data-lucide="github" style="width:12px;height:12px;margin-right:4px;"></i> GitHub verified
+      </div>
+      <div class="float-tag ft2">
+        <span style="color:var(--green);margin-right:4px;">●</span> Passive tracking
+      </div>
+      <div class="float-tag ft3">
+        <i data-lucide="shield" style="width:12px;height:12px;margin-right:4px;color:var(--amber);"></i> Stake protected
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="l-how">
+    <div class="l-section-label">The process</div>
+    <h2 class="l-section-h2 serif">The Path of the Forge</h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num serif">1</div>
+        <div class="how-step-h">AI Pathfinder</div>
+        <p class="how-step-p">Describe your goal. The AI validates your timeline, classifies it, and builds a realistic difficulty curve.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num serif" style="background:var(--amberDim);border-color:rgba(245,166,35,.3);">2</div>
+        <div class="how-step-h">Commit your stake</div>
+        <p class="how-step-p">Lock a meaningful amount. Not punitive — it's returned on success with yield earned during the lock period.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num serif">3</div>
+        <div class="how-step-h">Passive verification</div>
+        <p class="how-step-p">GitHub, Google Calendar, GPS, and Health APIs automatically confirm progress — no manual check-ins.</p>
+      </div>
+      <div class="how-step">
+        <div class="how-num serif" style="background:var(--greenDim);border-color:rgba(77,179,126,.3);">4</div>
+        <div class="how-step-h">The Quench</div>
+        <p class="how-step-p">Goal achieved. Stake returned. Forge Score updated. A cinematic moment for every hard-won completion.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="l-features">
+    <div class="l-section-label">What makes GoalForge different</div>
+    <h2 class="l-section-h2 serif">Built for people who are<br>serious about this time</h2>
+    <div class="grid3">
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-amber"><i data-lucide="brain" style="width:20px;height:20px;color:var(--amber);"></i></div>
+        <div class="feat-h">Goal intelligence, not templates</div>
+        <p class="feat-p">The AI understands that a fitness goal and a coding goal need completely different intensity curves, timelines, and milestones.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-steel"><i data-lucide="shield-check" style="width:20px;height:20px;color:var(--steel);"></i></div>
+        <div class="feat-h">Passive verification</div>
+        <p class="feat-p">Connected to GitHub, Google Calendar, GPS geofencing, and Health APIs. Your progress is confirmed automatically — not self-reported.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-green"><i data-lucide="trending-up" style="width:20px;height:20px;color:var(--green);"></i></div>
+        <div class="feat-h">Forge Score — public reputation</div>
+        <p class="feat-p">A discipline rating that compounds over time. Not hidden badges — a real, public signal of how serious you are about what you commit to.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-amber"><i data-lucide="coins" style="width:20px;height:20px;color:var(--amber);"></i></div>
+        <div class="feat-h">Yield-protocol staking</div>
+        <p class="feat-p">Your locked stake earns yield while you work. Succeed and get back more than you put in. Fail and it funds accountability, not charity.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-steel"><i data-lucide="calendar-check" style="width:20px;height:20px;color:var(--steel);"></i></div>
+        <div class="feat-h">Buffer days built-in</div>
+        <p class="feat-p">Life happens. Each goal comes with buffer days — use one and the lock period extends, maintaining both flexibility and accountability.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon feat-icon-green"><i data-lucide="users" style="width:20px;height:20px;color:var(--green);"></i></div>
+        <div class="feat-h">Group forge pacts</div>
+        <p class="feat-p">Commit with a team. Shared stakes, shared accountability. If the group succeeds, everyone wins. Peer pressure, productively applied.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <div class="l-cta" style="position:relative;z-index:5;">
+    <div>
+      <h2 class="l-cta-h serif">Ready to forge<br><em style="color:var(--amber);">something real?</em></h2>
+      <p class="l-cta-p">Your first goal is free. No card required. The AI Pathfinder will validate your timeline and build your plan in under 2 minutes.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;flex-shrink:0;">
+      <button class="btn btn-amber btn-lg" onclick="navigate('auth')">
+        <i data-lucide="zap" style="width:18px;height:18px;"></i> Start for free
+      </button>
+      <p style="font-size:12px;color:var(--text3);text-align:center;">No credit card · Cancel anytime</p>
+    </div>
+  </div>
+
+  <footer class="l-footer">
+    <div class="logo">
+      <div class="logo-mark"><i data-lucide="zap" style="width:14px;height:14px;"></i></div>
+      <span class="logo-text" style="font-size:15px;">GoalForge</span>
+    </div>
+    <p class="l-footer-p">© 2026 GoalForge. Built for the serious.</p>
+    <div style="display:flex;gap:20px;">
+      <span style="font-size:12px;color:var(--text3);cursor:pointer;">Privacy</span>
+      <span style="font-size:12px;color:var(--text3);cursor:pointer;">Terms</span>
+      <span style="font-size:12px;color:var(--text3);cursor:pointer;">Contact</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: AUTH
+══════════════════════════════════════════ -->
+<div id="page-auth" class="page">
+  <div class="auth-bg"></div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-mark"><i data-lucide="zap" style="width:15px;height:15px;"></i></div>
+      <span class="logo-text serif">GoalForge</span>
+    </div>
+    <div class="auth-tabs" id="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('signin')">Sign in</div>
+      <div class="auth-tab" onclick="switchAuthTab('signup')">Create account</div>
+    </div>
+
+    <div id="auth-signin">
+      <button class="oauth-btn" onclick="navigate('dash')">
+        <svg class="oauth-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <button class="oauth-btn" onclick="navigate('dash')">
+        <svg class="oauth-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        Continue with GitHub
+      </button>
+      <div class="auth-divider"><div class="auth-divider-line"></div><span class="auth-divider-text">or</span><div class="auth-divider-line"></div></div>
+      <div class="form-group">
+        <label class="label">Email</label>
+        <input class="input" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="label">Password</label>
+        <input class="input" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-amber btn-full btn-lg" onclick="navigate('dash')">Sign in to forge</button>
+    </div>
+
+    <div id="auth-signup" style="display:none;">
+      <button class="oauth-btn" onclick="navigate('dash')">
+        <svg class="oauth-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Sign up with Google
+      </button>
+      <div class="auth-divider"><div class="auth-divider-line"></div><span class="auth-divider-text">or</span><div class="auth-divider-line"></div></div>
+      <div class="form-group">
+        <label class="label">Full name</label>
+        <input class="input" type="text" placeholder="Aman Verma">
+      </div>
+      <div class="form-group">
+        <label class="label">Email</label>
+        <input class="input" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group" style="margin-bottom:24px;">
+        <label class="label">Password</label>
+        <input class="input" type="password" placeholder="Min. 8 characters">
+      </div>
+      <button class="btn btn-amber btn-full btn-lg" onclick="navigate('dash')">Create my account</button>
+    </div>
+
+    <p class="auth-footer">By continuing you agree to our <a>Terms</a> and <a>Privacy Policy</a></p>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--text3);">
+      <a onclick="navigate('landing')" style="cursor:pointer;color:var(--text3);">← Back to home</a>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════════ -->
+<div id="page-dash" class="page">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="logo">
+        <div class="logo-mark"><i data-lucide="zap" style="width:14px;height:14px;"></i></div>
+        <span class="logo-text serif" style="font-size:16px;">GoalForge</span>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-lbl">Workspace</div>
+      <div class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard">
+        <i data-lucide="layout-dashboard" class="nav-icon"></i> Dashboard
+      </div>
+      <div class="nav-item" onclick="showView('pathfinder')" id="nav-pathfinder">
+        <i data-lucide="brain" class="nav-icon"></i> AI Pathfinder
+        <span class="nav-badge">New</span>
+      </div>
+      <div class="nav-item" onclick="showView('plans')" id="nav-plans">
+        <i data-lucide="map" class="nav-icon"></i> My Plans
+      </div>
+      <div class="nav-item" onclick="showView('staking')" id="nav-staking">
+        <i data-lucide="coins" class="nav-icon"></i> Staking
+      </div>
+    </div>
+
+    <div class="sb-section" style="margin-top:8px;">
+      <div class="sb-section-lbl">Progress</div>
+      <div class="nav-item" onclick="showView('forge-score')" id="nav-forge-score">
+        <i data-lucide="award" class="nav-icon"></i> Forge Score
+      </div>
+      <div class="nav-item" onclick="showView('history')" id="nav-history">
+        <i data-lucide="clock" class="nav-icon"></i> History
+      </div>
+      <div class="nav-item" onclick="showView('slag')" id="nav-slag">
+        <i data-lucide="x-circle" class="nav-icon"></i> Slag Heap
+      </div>
+      <div class="nav-item" onclick="showView('groups')" id="nav-groups">
+        <i data-lucide="users" class="nav-icon"></i> Group Goals
+      </div>
+    </div>
+
+    <div class="sb-section" style="margin-top:8px;">
+      <div class="sb-section-lbl">Account</div>
+      <div class="nav-item" onclick="showView('settings')" id="nav-settings">
+        <i data-lucide="settings" class="nav-icon"></i> Settings
+      </div>
+    </div>
+
+    <div class="sb-bottom">
+      <div class="sb-user" onclick="showView('settings')">
+        <div class="sb-avatar">AS</div>
+        <div>
+          <div class="sb-user-name">Aman Soni</div>
+          <div class="sb-user-role">Journeyman · 780pts</div>
+        </div>
+        <i data-lucide="chevrons-up-down" style="width:14px;height:14px;color:var(--text3);margin-left:auto;"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <i data-lucide="search" style="width:14px;height:14px;color:var(--text3);flex-shrink:0;"></i>
+          <input placeholder="Search goals...">
+        </div>
+        <button class="btn-icon" onclick="notify('Calendar synced successfully','success')">
+          <i data-lucide="bell" style="width:16px;height:16px;"></i>
+        </button>
+        <button class="btn btn-amber btn-sm" onclick="showView('pathfinder')">
+          <i data-lucide="plus" style="width:14px;height:14px;"></i> New goal
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ── VIEW: DASHBOARD ── -->
+      <div class="view active" id="view-dashboard">
+        <div class="view-header flex-between">
+          <div>
+            <div class="view-h serif">Good morning, <em style="color:var(--amber);">Aman.</em></div>
+            <div class="view-sub">You have 3 active goals and 2 tasks due today.</div>
+          </div>
+          <button class="btn btn-amber" onclick="showView('pathfinder')">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> Forge new goal
+          </button>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-card-lbl">Active goals</div>
+            <div class="stat-card-val serif" style="color:var(--amber);">3</div>
+            <div class="stat-card-sub up">+1 this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-lbl">Quenched</div>
+            <div class="stat-card-val serif" style="color:var(--green);">37</div>
+            <div class="stat-card-sub">78% lifetime rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-lbl">Stake locked</div>
+            <div class="stat-card-val serif">₹60K</div>
+            <div class="stat-card-sub up">Earning yield</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-lbl">Forge Score</div>
+            <div class="stat-card-val serif" style="color:var(--amber);">780</div>
+            <div class="stat-card-sub up">Top 15%</div>
+          </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="dash-grid">
+          <div>
+            <!-- ACTIVE GOALS -->
+            <div class="card" style="margin-bottom:20px;">
+              <div class="flex-between" style="margin-bottom:20px;">
+                <div style="font-size:15px;font-weight:600;">Active goals</div>
+                <span class="badge badge-amber">3 live</span>
+              </div>
+              <div class="goal-list">
+                <div class="goal-card card-hover" onclick="openQuench('Master DSA in 60 days','₹5,000','Skill','Review sorting algorithms — implement merge sort from scratch',28,60)">
+                  <div class="goal-card-header">
+                    <div>
+                      <div class="goal-card-title">Master DSA in 60 days</div>
+                      <div class="goal-card-meta">Skill · GitHub verified · Day 28 of 60</div>
+                    </div>
+                    <span class="badge badge-steel">Skill</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill prog-steel" style="width:47%;"></div></div>
+                  <div class="goal-card-footer">
+                    <span class="goal-prog-label">47% complete · 32 days left</span>
+                    <span class="goal-prog-val">₹5,000 staked</span>
+                  </div>
+                </div>
+                <div class="goal-card card-hover" onclick="openQuench('Run 5K in under 25 min','₹3,000','Fitness','Complete 6km trail run at Cubbon Park — log via GPS',14,30)">
+                  <div class="goal-card-header">
+                    <div>
+                      <div class="goal-card-title">Run 5K in under 25 min</div>
+                      <div class="goal-card-meta">Fitness · GPS verified · Day 14 of 30</div>
+                    </div>
+                    <span class="badge badge-green">Fitness</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill prog-green" style="width:47%;"></div></div>
+                  <div class="goal-card-footer">
+                    <span class="goal-prog-label">47% complete · 16 days left</span>
+                    <span class="goal-prog-val">₹3,000 staked</span>
+                  </div>
+                </div>
+                <div class="goal-card card-hover" onclick="openQuench('Ship GoalForge MVP','₹15,000','Build','Write Supabase auth middleware — protect /dashboard route',7,45)">
+                  <div class="goal-card-header">
+                    <div>
+                      <div class="goal-card-title">Ship GoalForge MVP</div>
+                      <div class="goal-card-meta">Build · Calendar verified · Day 7 of 45</div>
+                    </div>
+                    <span class="badge badge-amber">Build</span>
+                  </div>
+                  <div class="prog-track"><div class="prog-fill prog-amber" style="width:16%;"></div></div>
+                  <div class="goal-card-footer">
+                    <span class="goal-prog-label">16% complete · 38 days left</span>
+                    <span class="goal-prog-val">₹15,000 staked</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TODAY'S TASKS -->
+            <div class="card">
+              <div class="flex-between" style="margin-bottom:16px;">
+                <div style="font-size:15px;font-weight:600;">Today's tasks</div>
+                <span style="font-size:12px;color:var(--text2);">Apr 19, 2026</span>
+              </div>
+              <div class="task-list">
+                <div class="task-item" id="task-1">
+                  <div class="task-check" onclick="toggleTask('task-1')"><i data-lucide="check" style="width:12px;height:12px;display:none;" id="task-1-icon"></i></div>
+                  <div class="task-body">
+                    <div class="task-name">Review sorting algorithms</div>
+                    <div class="task-meta">DSA goal · due 8 PM</div>
+                  </div>
+                  <div class="task-reward">+40 pts</div>
+                </div>
+                <div class="task-item" id="task-2">
+                  <div class="task-check" onclick="toggleTask('task-2')"><i data-lucide="check" style="width:12px;height:12px;display:none;" id="task-2-icon"></i></div>
+                  <div class="task-body">
+                    <div class="task-name">Morning run — 4.5km target</div>
+                    <div class="task-meta">5K goal · GPS will auto-verify</div>
+                  </div>
+                  <div class="task-reward">+30 pts</div>
+                </div>
+                <div class="task-item" id="task-3">
+                  <div class="task-check done" onclick="toggleTask('task-3')"><i data-lucide="check" style="width:12px;height:12px;" id="task-3-icon"></i></div>
+                  <div class="task-body done">
+                    <div class="task-name">Set up Supabase project & schema</div>
+                    <div class="task-meta">MVP goal · verified 9:42 AM</div>
+                  </div>
+                  <div class="task-reward">+45 pts</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div style="display:flex;flex-direction:column;gap:20px;">
+            <!-- FORGE SCORE -->
+            <div class="card" style="text-align:center;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px;">Forge Score</div>
+              <div class="forge-score-ring">
+                <svg class="forge-score-svg" width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surf2)" stroke-width="8"/>
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="var(--amber)" stroke-width="8"
+                    stroke-dasharray="364" stroke-dashoffset="78" stroke-linecap="round"/>
+                </svg>
+                <div class="forge-score-text">
+                  <div class="forge-score-num serif">780</div>
+                  <div class="forge-score-lbl">score</div>
+                </div>
+              </div>
+              <div class="forge-rank-pill">
+                <i data-lucide="hammer" style="width:12px;height:12px;"></i> Journeyman
+              </div>
+              <p style="font-size:12px;color:var(--text3);margin-top:10px;">Top 15% of all users</p>
+            </div>
+
+            <!-- BUFFER DAYS -->
+            <div class="card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:14px;">Buffer days</div>
+              <div class="buffer-tokens">
+                <div class="buffer-token" title="Available"></div>
+                <div class="buffer-token" title="Available"></div>
+                <div class="buffer-token used" title="Used"></div>
+              </div>
+              <p style="font-size:12px;color:var(--text2);line-height:1.5;">2 of 3 remaining. Using one extends your lock period and preserves your stake.</p>
+            </div>
+
+            <!-- CONNECTED APIS -->
+            <div class="card">
+              <div style="font-size:13px;font-weight:600;margin-bottom:14px;">Verification APIs</div>
+              <div class="verif-grid">
+                <div class="verif-pill">
+                  <div class="verif-dot connected"></div>
+                  <div><div class="verif-name">GitHub</div><div class="verif-status">Connected</div></div>
+                </div>
+                <div class="verif-pill">
+                  <div class="verif-dot connected"></div>
+                  <div><div class="verif-name">Google Cal</div><div class="verif-status">Connected</div></div>
+                </div>
+                <div class="verif-pill">
+                  <div class="verif-dot connected"></div>
+                  <div><div class="verif-name">GPS</div><div class="verif-status">Connected</div></div>
+                </div>
+                <div class="verif-pill">
+                  <div class="verif-dot disconnected"></div>
+                  <div><div class="verif-name">Health</div><div class="verif-status" style="color:var(--amber);">Connect</div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MINI CALENDAR -->
+            <div class="card">
+              <div class="flex-between" style="margin-bottom:12px;">
+                <div style="font-size:13px;font-weight:600;">April 2026</div>
+                <i data-lucide="calendar" style="width:14px;height:14px;color:var(--text3);"></i>
+              </div>
+              <div class="cal-grid">
+                <div class="cal-head">S</div><div class="cal-head">M</div><div class="cal-head">T</div><div class="cal-head">W</div><div class="cal-head">T</div><div class="cal-head">F</div><div class="cal-head">S</div>
+                <div class="cal-day"></div><div class="cal-day past">1</div><div class="cal-day past">2</div><div class="cal-day past">3</div><div class="cal-day past">4</div><div class="cal-day past">5</div><div class="cal-day past">6</div>
+                <div class="cal-day past">7</div><div class="cal-day past">8</div><div class="cal-day past">9</div><div class="cal-day past">10</div><div class="cal-day past">11</div><div class="cal-day past">12</div><div class="cal-day past">13</div>
+                <div class="cal-day past">14</div><div class="cal-day past">15</div><div class="cal-day past">16</div><div class="cal-day past">17</div><div class="cal-day past">18</div><div class="cal-day today">19</div><div class="cal-day has-goal">20</div>
+                <div class="cal-day has-goal">21</div><div class="cal-day">22</div><div class="cal-day has-goal">23</div><div class="cal-day">24</div><div class="cal-day">25</div><div class="cal-day has-goal">26</div><div class="cal-day">27</div>
+                <div class="cal-day">28</div><div class="cal-day has-goal">29</div><div class="cal-day">30</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: AI PATHFINDER ── -->
+      <div class="view" id="view-pathfinder" style="padding:0;margin:-32px;">
+        <div class="pathfinder-layout" style="height:calc(100vh - 57px);">
+          <!-- CHAT -->
+          <div class="pf-chat">
+            <div class="pf-chat-header">
+              <div class="pf-ai-avatar"><i data-lucide="brain" style="width:18px;height:18px;"></i></div>
+              <div>
+                <div style="font-size:14px;font-weight:600;">AI Pathfinder</div>
+                <div style="font-size:11px;color:var(--text2);">Elite discipline architect</div>
+              </div>
+              <div class="pf-chat-status"></div>
+            </div>
+
+            <div class="pf-messages" id="pf-messages">
+              <div class="pf-msg ai">
+                <div class="pf-msg-av ai"><i data-lucide="brain" style="width:14px;height:14px;"></i></div>
+                <div class="pf-bubble">
+                  <p>Welcome. I'm the GoalForge AI Pathfinder — your discipline architect.</p>
+                  <p>I don't just generate plans. I <strong>validate timelines</strong>, flag unrealistic goals, and calibrate intensity based on what your specific goal actually demands.</p>
+                  <p>Tell me what you want to forge. Be specific — the more detail you give me, the better the plan.</p>
+                </div>
+              </div>
+              <div class="pf-msg ai">
+                <div class="pf-msg-av ai"><i data-lucide="brain" style="width:14px;height:14px;"></i></div>
+                <div class="pf-bubble">
+                  <p>Or pick a common goal to start:</p>
+                  <div class="suggestion-chips">
+                    <div class="chip" onclick="sendSuggestion('Learn DSA and crack coding interviews in 60 days')">DSA in 60 days</div>
+                    <div class="chip" onclick="sendSuggestion('Build and ship a SaaS MVP in 45 days')">Ship an MVP</div>
+                    <div class="chip" onclick="sendSuggestion('Run 5K under 25 minutes in 30 days')">5K in 30 days</div>
+                    <div class="chip" onclick="sendSuggestion('Wake up at 5am every day for 21 days')">5AM habit</div>
+                    <div class="chip" onclick="sendSuggestion('Read 10 books in 90 days')">Read 10 books</div>
+                    <div class="chip" onclick="sendSuggestion('Lose 5kg in 2 weeks')">Lose 5kg fast</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pf-input-area">
+              <div class="pf-input-row">
+                <textarea class="pf-input" id="pf-input" placeholder="Describe your goal..." rows="2" onkeydown="pfKeydown(event)"></textarea>
+                <button class="pf-send" id="pf-send" onclick="pfSend()">
+                  <i data-lucide="send" style="width:16px;height:16px;"></i>
+                </button>
+              </div>
+              <p style="font-size:11px;color:var(--text3);margin-top:8px;">Press Enter to send · Shift+Enter for new line</p>
+            </div>
+          </div>
+
+          <!-- PANEL -->
+          <div class="pf-panel">
+            <div class="pf-panel-section">
+              <div class="pf-panel-h">Difficulty curve preview</div>
+              <div id="curve-empty" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rlg);padding:32px;text-align:center;">
+                <i data-lucide="activity" style="width:24px;height:24px;color:var(--text3);margin:0 auto 10px;display:block;"></i>
+                <p style="font-size:12px;color:var(--text3);">Your difficulty curve will appear here once the AI generates your plan.</p>
+              </div>
+              <div id="curve-chart" style="display:none;">
+                <div class="curve-chart" id="curve-bars"></div>
+                <div class="curve-labels"><span>Day 1</span><span id="curve-mid-label">Day 15</span><span id="curve-end-label">Day 30</span></div>
+              </div>
+            </div>
+
+            <div class="pf-panel-section" id="plan-confirm-wrap" style="display:none;">
+              <div class="pf-panel-h">Plan summary</div>
+              <div class="confirm-card">
+                <div class="confirm-row"><span class="confirm-row-key">Goal</span><span class="confirm-row-val" id="confirm-title">—</span></div>
+                <div class="confirm-row"><span class="confirm-row-key">Category</span><span class="confirm-row-val" id="confirm-cat">—</span></div>
+                <div class="confirm-row"><span class="confirm-row-key">Duration</span><span class="confirm-row-val" id="confirm-days">—</span></div>
+                <div class="confirm-row"><span class="confirm-row-key">Stake</span><span class="confirm-row-val amber" id="confirm-stake">—</span></div>
+              </div>
+            </div>
+
+            <div class="pf-panel-section" id="commit-btn-wrap" style="display:none;">
+              <button class="btn btn-amber btn-full" onclick="commitGoal()">
+                <i data-lucide="zap" style="width:16px;height:16px;"></i> Commit to forge
+              </button>
+              <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px;">This will lock your stake and begin passive verification.</p>
+            </div>
+
+            <div class="pf-panel-section">
+              <div class="pf-panel-h">Verification methods</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+                  <i data-lucide="github" style="width:14px;height:14px;color:var(--text3);"></i> Coding goals → GitHub commits
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+                  <i data-lucide="map-pin" style="width:14px;height:14px;color:var(--text3);"></i> Fitness goals → GPS location
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+                  <i data-lucide="calendar" style="width:14px;height:14px;color:var(--text3);"></i> Deep work → Google Calendar
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+                  <i data-lucide="activity" style="width:14px;height:14px;color:var(--text3);"></i> Health goals → Health Connect
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: MY PLANS ── -->
+      <div class="view" id="view-plans">
+        <div class="view-header flex-between">
+          <div>
+            <div class="view-h serif">My Plans</div>
+            <div class="view-sub">3 active · 37 completed · 4 failed</div>
+          </div>
+          <button class="btn btn-amber" onclick="showView('pathfinder')">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i> New plan
+          </button>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:24px;">
+          <button class="btn btn-amber btn-sm">All</button>
+          <button class="btn btn-ghost btn-sm">Active</button>
+          <button class="btn btn-ghost btn-sm">Completed</button>
+          <button class="btn btn-ghost btn-sm">Failed</button>
+        </div>
+
+        <div class="plan-card" style="margin-bottom:16px;" onclick="openQuench('Master DSA in 60 days','₹5,000','Skill','Review sorting algorithms — implement merge sort',28,60)">
+          <div class="plan-card-top">
+            <div>
+              <div class="plan-card-title">Master DSA in 60 days</div>
+              <div class="plan-card-category">Skill · GitHub verified · Started Apr 1, 2026</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="plan-stake">₹5,000</div>
+              <div class="plan-stake-lbl">staked</div>
+            </div>
+          </div>
+          <div class="plan-timeline" id="tl-dsa"></div>
+          <div class="prog-track"><div class="prog-fill prog-steel" style="width:47%;"></div></div>
+          <div class="plan-footer">
+            <span class="plan-days-left"><strong>32 days</strong> remaining · Day 28 of 60</span>
+            <span class="badge badge-steel">Active</span>
+          </div>
+        </div>
+
+        <div class="plan-card" style="margin-bottom:16px;" onclick="openQuench('Run 5K under 25 minutes','₹3,000','Fitness','Complete 6km trail run at Cubbon Park',14,30)">
+          <div class="plan-card-top">
+            <div>
+              <div class="plan-card-title">Run 5K in under 25 min</div>
+              <div class="plan-card-category">Fitness · GPS verified · Started Apr 5, 2026</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="plan-stake">₹3,000</div>
+              <div class="plan-stake-lbl">staked</div>
+            </div>
+          </div>
+          <div class="plan-timeline" id="tl-run"></div>
+          <div class="prog-track"><div class="prog-fill prog-green" style="width:47%;"></div></div>
+          <div class="plan-footer">
+            <span class="plan-days-left"><strong>16 days</strong> remaining · Day 14 of 30</span>
+            <span class="badge badge-green">Active</span>
+          </div>
+        </div>
+
+        <div class="plan-card" onclick="openQuench('Ship GoalForge MVP','₹15,000','Build','Write Supabase auth middleware',7,45)">
+          <div class="plan-card-top">
+            <div>
+              <div class="plan-card-title">Ship GoalForge MVP</div>
+              <div class="plan-card-category">Build · Calendar verified · Started Apr 13, 2026</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="plan-stake">₹15,000</div>
+              <div class="plan-stake-lbl">staked</div>
+            </div>
+          </div>
+          <div class="plan-timeline" id="tl-mvp"></div>
+          <div class="prog-track"><div class="prog-fill prog-amber" style="width:16%;"></div></div>
+          <div class="plan-footer">
+            <span class="plan-days-left"><strong>38 days</strong> remaining · Day 7 of 45</span>
+            <span class="badge badge-amber">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: STAKING ── -->
+      <div class="view" id="view-staking">
+        <div class="view-header">
+          <div class="view-h serif">Staking</div>
+          <div class="view-sub">Your capital at work — earning yield while you forge.</div>
+        </div>
+        <div class="dash-grid">
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div class="stake-hero">
+                <div class="stake-lbl">Total locked</div>
+                <div class="stake-amount serif">₹23,000</div>
+                <div class="stake-status"><i data-lucide="lock" style="width:12px;height:12px;"></i> Funds secured</div>
+              </div>
+              <div class="stake-grid">
+                <div class="stake-metric">
+                  <div class="stake-metric-val serif" style="color:var(--green);">₹184</div>
+                  <div class="stake-metric-lbl">Yield earned</div>
+                </div>
+                <div class="stake-metric">
+                  <div class="stake-metric-val serif">8.1%</div>
+                  <div class="stake-metric-lbl">Annual yield rate</div>
+                </div>
+                <div class="stake-metric">
+                  <div class="stake-metric-val serif">3</div>
+                  <div class="stake-metric-lbl">Active goals</div>
+                </div>
+                <div class="stake-metric">
+                  <div class="stake-metric-val serif" style="color:var(--amber);">38d</div>
+                  <div class="stake-metric-lbl">Longest lock</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div style="font-size:15px;font-weight:600;margin-bottom:16px;">Per-goal breakdown</div>
+              <div class="yield-bar-wrap">
+                <div class="flex-between"><span style="font-size:13px;font-weight:500;">Master DSA in 60 days</span><span style="font-size:12px;color:var(--text2);">₹5,000</span></div>
+                <div class="yield-bar-track"><div class="yield-bar-fill" style="width:47%;"></div></div>
+                <div class="flex-between" style="margin-top:4px;"><span style="font-size:11px;color:var(--text3);">47% through lock period</span><span style="font-size:11px;color:var(--green);">+₹48 yield</span></div>
+              </div>
+              <div class="yield-bar-wrap">
+                <div class="flex-between"><span style="font-size:13px;font-weight:500;">Run 5K under 25 min</span><span style="font-size:12px;color:var(--text2);">₹3,000</span></div>
+                <div class="yield-bar-track"><div class="yield-bar-fill" style="width:47%;background:linear-gradient(90deg,var(--green),#6ed49e);"></div></div>
+                <div class="flex-between" style="margin-top:4px;"><span style="font-size:11px;color:var(--text3);">47% through lock period</span><span style="font-size:11px;color:var(--green);">+₹29 yield</span></div>
+              </div>
+              <div class="yield-bar-wrap">
+                <div class="flex-between"><span style="font-size:13px;font-weight:500;">Ship GoalForge MVP</span><span style="font-size:12px;color:var(--text2);">₹15,000</span></div>
+                <div class="yield-bar-track"><div class="yield-bar-fill" style="width:16%;"></div></div>
+                <div class="flex-between" style="margin-top:4px;"><span style="font-size:11px;color:var(--text3);">16% through lock period</span><span style="font-size:11px;color:var(--green);">+₹107 yield</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div style="font-size:15px;font-weight:600;margin-bottom:20px;">Lock timeline</div>
+              <div class="timeline-steps">
+                <div class="tl-step">
+                  <div class="tl-dot done"><i data-lucide="check" style="width:11px;height:11px;"></i></div>
+                  <div class="tl-body">
+                    <div class="tl-title">Stake committed</div>
+                    <div class="tl-sub">Apr 1, 2026 · ₹5,000 locked for DSA goal</div>
+                  </div>
+                </div>
+                <div class="tl-step">
+                  <div class="tl-dot done"><i data-lucide="check" style="width:11px;height:11px;"></i></div>
+                  <div class="tl-body">
+                    <div class="tl-title">Yield begins accruing</div>
+                    <div class="tl-sub">Apr 2, 2026 · 8.1% APY applied</div>
+                  </div>
+                </div>
+                <div class="tl-step">
+                  <div class="tl-dot active"><i data-lucide="zap" style="width:11px;height:11px;"></i></div>
+                  <div class="tl-body">
+                    <div class="tl-title" style="color:var(--amber);">Goal in progress</div>
+                    <div class="tl-sub">Today · Day 28 of 60 · On track</div>
+                  </div>
+                </div>
+                <div class="tl-step">
+                  <div class="tl-dot future">4</div>
+                  <div class="tl-body">
+                    <div class="tl-title">Quench & release</div>
+                    <div class="tl-sub">May 31, 2026 · ₹5,048 returned (principal + yield)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="background:var(--amberDim2);border-color:rgba(245,166,35,.15);">
+              <div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px;">Buffer day impact</div>
+              <p style="font-size:12px;color:var(--text2);line-height:1.6;">Using a buffer day extends the lock period by 1 day. This means more yield earned — it's a feature, not a punishment. You currently have 2 buffer days remaining.</p>
+              <button class="btn btn-ghost btn-sm" style="margin-top:14px;width:100%;justify-content:center;">Manage buffer days</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: FORGE SCORE ── -->
+      <div class="view" id="view-forge-score">
+        <div class="view-header"><div class="view-h serif">Forge Score</div><div class="view-sub">Your public discipline reputation.</div></div>
+        <div class="dash-grid">
+          <div>
+            <div class="card" style="margin-bottom:20px;text-align:center;padding:40px;">
+              <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Your current score</div>
+              <div class="score-big">780</div>
+              <div class="score-rank">Journeyman · Top 15% of all users</div>
+              <div class="forge-rank-pill"><i data-lucide="hammer" style="width:12px;height:12px;"></i> 220 points to Master</div>
+            </div>
+            <div class="card">
+              <div style="font-size:15px;font-weight:600;margin-bottom:20px;">Score breakdown</div>
+              <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-name">Completion rate</span><span class="breakdown-val">78%</span></div>
+                <div class="prog-track"><div class="prog-fill prog-amber" style="width:78%;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-name">Stake consistency</span><span class="breakdown-val">85%</span></div>
+                <div class="prog-track"><div class="prog-fill prog-steel" style="width:85%;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-name">Passive verifications</span><span class="breakdown-val">92%</span></div>
+                <div class="prog-track"><div class="prog-fill prog-green" style="width:92%;"></div></div>
+              </div>
+              <div class="breakdown-item">
+                <div class="breakdown-header"><span class="breakdown-name">Streak bonus</span><span class="breakdown-val">+40pts</span></div>
+                <div class="prog-track"><div class="prog-fill prog-amber" style="width:40%;"></div></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:20px;">
+              <div style="font-size:15px;font-weight:600;margin-bottom:16px;">Rank ladder</div>
+              <div class="rank-ladder">
+                <div class="rank-item"><div class="rank-icon" style="background:var(--amberDim);font-size:16px;">🪨</div><div class="rank-name">Apprentice</div><div class="rank-range">0–299</div></div>
+                <div class="rank-item"><div class="rank-icon" style="background:var(--steelDim);font-size:16px;">⚒️</div><div class="rank-name">Craftsman</div><div class="rank-range">300–599</div></div>
+                <div class="rank-item current"><div class="rank-icon" style="background:var(--amberDim);font-size:16px;">🔨</div><div class="rank-name">Journeyman</div><div class="rank-range">600–999</div></div>
+                <div class="rank-item"><div class="rank-icon" style="background:rgba(255,255,255,.04);font-size:16px;">⚡</div><div class="rank-name">Master</div><div class="rank-range">1000–1499</div></div>
+                <div class="rank-item"><div class="rank-icon" style="background:rgba(255,255,255,.04);font-size:16px;">🏆</div><div class="rank-name">Grandmaster</div><div class="rank-range">1500+</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: HISTORY ── -->
+      <div class="view" id="view-history">
+        <div class="view-header"><div class="view-h serif">History</div><div class="view-sub">37 goals quenched. Every one hardened you.</div></div>
+        <div class="card">
+          <div class="goal-list">
+            <div class="goal-card" style="cursor:default;border-left:3px solid var(--green);">
+              <div class="goal-card-header">
+                <div><div class="goal-card-title">Read Clean Code by Robert Martin</div><div class="goal-card-meta">Skill · Completed Mar 20, 2026 · 21 days</div></div>
+                <span class="badge badge-green">Quenched</span>
+              </div>
+              <div class="prog-track"><div class="prog-fill prog-green" style="width:100%;"></div></div>
+              <div class="goal-card-footer"><span class="goal-prog-label">100% complete · ₹2,000 returned + ₹14 yield</span><span style="font-size:12px;color:var(--green);">+120 pts</span></div>
+            </div>
+            <div class="goal-card" style="cursor:default;border-left:3px solid var(--green);">
+              <div class="goal-card-header">
+                <div><div class="goal-card-title">Wake up at 5AM for 30 days</div><div class="goal-card-meta">Habit · Completed Feb 28, 2026 · 30 days</div></div>
+                <span class="badge badge-green">Quenched</span>
+              </div>
+              <div class="prog-track"><div class="prog-fill prog-green" style="width:100%;"></div></div>
+              <div class="goal-card-footer"><span class="goal-prog-label">100% complete · ₹3,500 returned + ₹23 yield</span><span style="font-size:12px;color:var(--green);">+180 pts</span></div>
+            </div>
+            <div class="goal-card" style="cursor:default;border-left:3px solid var(--red);">
+              <div class="goal-card-header">
+                <div><div class="goal-card-title">No social media for 14 days</div><div class="goal-card-meta">Habit · Failed Feb 10, 2026 · 8/14 days</div></div>
+                <span class="badge badge-red">Failed</span>
+              </div>
+              <div class="prog-track"><div class="prog-fill" style="width:57%;background:var(--red);"></div></div>
+              <div class="goal-card-footer"><span class="goal-prog-label">57% complete · ₹1,000 forfeited</span><span style="font-size:12px;color:var(--red);">-40 pts</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: SLAG HEAP ── -->
+      <div class="view" id="view-slag">
+        <div class="view-header"><div class="view-h serif">Slag Heap</div><div class="view-sub">Goals that didn't make it. Learn, adapt, return stronger.</div></div>
+        <div style="background:var(--redDim);border:1px solid rgba(224,92,92,.15);border-radius:var(--rlg);padding:16px 20px;display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--red);flex-shrink:0;"></i>
+          <p style="font-size:13px;color:var(--text2);line-height:1.5;">4 goals in the slag heap. The AI will analyze patterns and suggest improvements when you set similar goals.</p>
+        </div>
+        <div class="slag-card">
+          <div class="slag-title">No social media for 14 days</div>
+          <div class="slag-meta">Failed · Feb 10, 2026 · Day 8 of 14 · ₹1,000 forfeited</div>
+          <div class="slag-lesson"><strong>AI analysis:</strong> Habit goals under 14 days rarely form lasting change. The stake was too low (₹71/day) to create meaningful discomfort. Recommend: 30-day version with ₹150/day stake minimum.</div>
+        </div>
+        <div class="slag-card">
+          <div class="slag-title">Launch a YouTube channel in 7 days</div>
+          <div class="slag-meta">Failed · Jan 15, 2026 · Day 3 of 7 · ₹2,000 forfeited</div>
+          <div class="slag-lesson"><strong>AI analysis:</strong> Creative goals flagged as severely under-scoped at intake but user proceeded. 7 days is insufficient for a launch. The AI Pathfinder would now block this without a scope renegotiation.</div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: GROUPS ── -->
+      <div class="view" id="view-groups">
+        <div class="view-header flex-between">
+          <div><div class="view-h serif">Group Goals</div><div class="view-sub">Shared accountability. Collective stakes.</div></div>
+          <button class="btn btn-amber"><i data-lucide="plus" style="width:16px;height:16px;"></i> Create pact</button>
+        </div>
+        <div class="pact-card">
+          <div class="pact-header">
+            <div>
+              <div class="pact-title">GoalForge Dev Team — Ship MVP</div>
+              <div class="pact-members">4 members · 45 days · Started Apr 13</div>
+            </div>
+            <span class="badge badge-amber">Active</span>
+          </div>
+          <div class="member-avatars">
+            <div class="member-av" style="background:linear-gradient(135deg,#f5a623,#fbbf4a);">AS</div>
+            <div class="member-av" style="background:linear-gradient(135deg,#7ba3c8,#9fc0e0);">RK</div>
+            <div class="member-av" style="background:linear-gradient(135deg,#4db37e,#6ed49e);">PM</div>
+            <div class="member-av" style="background:linear-gradient(135deg,#e05c5c,#ea8080);">VJ</div>
+          </div>
+          <div>
+            <div class="flex-between" style="margin-bottom:8px;font-size:12px;"><span style="color:var(--text2);">Team progress</span><span style="font-weight:600;color:var(--amber);">67%</span></div>
+            <div class="prog-track" style="height:6px;"><div class="prog-fill prog-amber" style="width:67%;"></div></div>
+          </div>
+          <div class="pact-warning"><i data-lucide="alert-triangle" style="width:14px;height:14px;flex-shrink:0;"></i> If any member fails, all stakes are extended by the buffer period.</div>
+        </div>
+        <div class="pact-card" style="opacity:.6;">
+          <div class="pact-header">
+            <div>
+              <div class="pact-title">Morning Warriors — 5AM Club</div>
+              <div class="pact-members">8 members · 30 days · Completed Mar 15</div>
+            </div>
+            <span class="badge badge-green">Quenched</span>
+          </div>
+          <div class="member-avatars">
+            <div class="member-av">A</div><div class="member-av">B</div><div class="member-av">C</div><div class="member-av">D</div>
+            <div class="member-av" style="background:var(--surf2);color:var(--text2);">+4</div>
+          </div>
+          <div class="prog-track" style="height:6px;margin-top:12px;"><div class="prog-fill prog-green" style="width:100%;"></div></div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: SETTINGS ── -->
+      <div class="view" id="view-settings">
+        <div class="view-header"><div class="view-h serif">Settings</div></div>
+        <div class="settings-grid">
+          <div class="settings-nav">
+            <div class="settings-nav-item active" onclick="switchSettings(this,'s-profile')">Profile</div>
+            <div class="settings-nav-item" onclick="switchSettings(this,'s-notif')">Notifications</div>
+            <div class="settings-nav-item" onclick="switchSettings(this,'s-verif')">Verifications</div>
+            <div class="settings-nav-item" onclick="switchSettings(this,'s-stake')">Staking</div>
+            <div class="settings-nav-item" onclick="switchSettings(this,'s-danger')">Danger zone</div>
+          </div>
+          <div>
+            <div class="settings-section active" id="s-profile">
+              <div class="settings-h">Profile</div>
+              <div class="form-group"><label class="label">Display name</label><input class="input" value="Aman Soni"></div>
+              <div class="form-group"><label class="label">Email</label><input class="input" value="aman@example.com" type="email"></div>
+              <div class="form-group"><label class="label">Username</label><input class="input" value="aman_forges"></div>
+              <button class="btn btn-amber" onclick="notify('Profile saved','success')">Save changes</button>
+            </div>
+            <div class="settings-section" id="s-notif">
+              <div class="settings-h">Notifications</div>
+              <div class="settings-row"><div><div class="settings-row-label">Daily task reminder</div><div class="settings-row-sub">Get notified at 8AM about today's tasks</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div><div class="settings-row-label">Verification alerts</div><div class="settings-row-sub">Know when passive verification runs</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div><div class="settings-row-label">Streak warnings</div><div class="settings-row-sub">Alert when you're about to break a streak</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              <div class="settings-row"><div><div class="settings-row-label">Forge Score updates</div><div class="settings-row-sub">Weekly score report</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="settings-section" id="s-verif">
+              <div class="settings-h">Verification connections</div>
+              <div class="settings-row"><div><div class="settings-row-label">GitHub</div><div class="settings-row-sub" style="color:var(--green);">Connected · @aman_soni</div></div><button class="btn btn-danger btn-sm" onclick="notify('GitHub disconnected','warning')">Disconnect</button></div>
+              <div class="settings-row"><div><div class="settings-row-label">Google Calendar</div><div class="settings-row-sub" style="color:var(--green);">Connected</div></div><button class="btn btn-danger btn-sm">Disconnect</button></div>
+              <div class="settings-row"><div><div class="settings-row-label">GPS / Location</div><div class="settings-row-sub" style="color:var(--green);">Connected</div></div><button class="btn btn-danger btn-sm">Disconnect</button></div>
+              <div class="settings-row"><div><div class="settings-row-label">Health Connect</div><div class="settings-row-sub" style="color:var(--amber);">Not connected</div></div><button class="btn btn-amber btn-sm" onclick="notify('Opening Health Connect auth...','info')">Connect</button></div>
+            </div>
+            <div class="settings-section" id="s-stake">
+              <div class="settings-h">Staking preferences</div>
+              <div class="settings-row"><div><div class="settings-row-label">Auto-stake on commit</div><div class="settings-row-sub">Automatically lock stake when a plan is confirmed</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="form-group" style="margin-top:16px;"><label class="label">Default stake amount (₹)</label><input class="input" type="number" value="5000"></div>
+              <div class="form-group"><label class="label">Minimum stake per day</label><input class="input" type="number" value="150"></div>
+            </div>
+            <div class="settings-section" id="s-danger">
+              <div class="settings-h">Danger zone</div>
+              <div class="card" style="border-color:rgba(224,92,92,.2);background:var(--redDim);">
+                <div class="flex-between">
+                  <div><div style="font-size:14px;font-weight:600;color:var(--red);">Delete account</div><div style="font-size:12px;color:var(--text2);margin-top:3px;">Permanently delete your account and all data. Stakes will be forfeited.</div></div>
+                  <button class="btn btn-danger btn-sm" onclick="notify('This action cannot be undone. Contact support.','error')">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end page-body -->
+  </div><!-- end main-content -->
+</div><!-- end page-dash -->
+
+<!-- ══════════════════════════════════════════
+     QUENCH MODAL
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="quench-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="qm-title">Goal title</div>
+        <div class="modal-sub" id="qm-stake">Stake · Category</div>
+      </div>
+      <button class="modal-close" onclick="closeQuench()"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+    </div>
+    <div class="modal-body" id="qm-body">
+      <div class="quench-anim hot" id="qm-anim">
+        <i data-lucide="flame" class="quench-icon" style="color:var(--amber);"></i>
+      </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Today's schedule</div>
+      <div class="day-schedule">
+        <div class="sched-item" style="opacity:.5;">
+          <div class="sched-label">Yesterday</div>
+          <div class="sched-task">Foundation & research complete</div>
+          <div class="sched-status">✓ Verified</div>
+        </div>
+        <div class="sched-item active">
+          <div class="sched-label">Today (Active)</div>
+          <div class="sched-task" id="qm-task">—</div>
+        </div>
+        <div class="sched-item" style="opacity:.5;">
+          <div class="sched-label">Tomorrow</div>
+          <div class="sched-task">Optimization & next milestone</div>
+        </div>
+      </div>
+      <div id="qm-success" style="display:none;" class="quench-success">
+        <div class="quench-success-icon"><i data-lucide="check" style="width:28px;height:28px;"></i></div>
+        <div class="quench-success-h serif">Quenched. <em style="color:var(--amber);">Well done.</em></div>
+        <p class="quench-success-p">Passive verification complete. Forge Score updated. Your discipline is hardening.</p>
+      </div>
+    </div>
+    <div class="modal-footer" id="qm-footer">
+      <button class="btn btn-surface" style="flex:1;justify-content:center;" onclick="useBuffer()"><i data-lucide="clock" style="width:15px;height:15px;"></i> Use buffer day</button>
+      <button class="btn btn-amber" style="flex:1;justify-content:center;" onclick="doQuench()"><i data-lucide="shield-check" style="width:15px;height:15px;"></i> Mark complete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  buildTimelines();
+  setTimeout(() => notify('Welcome back, Aman! 2 tasks due today.', 'info'), 800);
+});
+
+// ── NAVIGATION ──
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  lucide.createIcons();
+  if (page === 'dash') {
+    setTimeout(() => notify('Verified: 3 APIs connected', 'success'), 1200);
+  }
+}
+
+// ── DASHBOARD VIEWS ──
+const viewTitles = {
+  dashboard: 'Dashboard', pathfinder: 'AI Pathfinder', plans: 'My Plans',
+  staking: 'Staking', 'forge-score': 'Forge Score', history: 'History',
+  slag: 'Slag Heap', groups: 'Group Goals', settings: 'Settings'
+};
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent = viewTitles[id] || id;
+  lucide.createIcons();
+}
+
+// ── AUTH TABS ──
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'signin') || (i === 1 && tab === 'signup'));
+  });
+  document.getElementById('auth-signin').style.display = tab === 'signin' ? 'block' : 'none';
+  document.getElementById('auth-signup').style.display = tab === 'signup' ? 'block' : 'none';
+}
+
+// ── TASK TOGGLE ──
+function toggleTask(id) {
+  const item = document.getElementById(id);
+  const icon = document.getElementById(id + '-icon');
+  const check = item.querySelector('.task-check');
+  const isDone = check.classList.contains('done');
+  if (isDone) {
+    check.classList.remove('done');
+    icon.style.display = 'none';
+    item.classList.remove('done');
+  } else {
+    check.classList.add('done');
+    icon.style.display = 'block';
+    item.classList.add('done');
+    notify('Task marked complete! +pts earned', 'success');
+  }
+  lucide.createIcons();
+}
+
+// ── PLAN TIMELINES ──
+function buildTimelines() {
+  buildTL('tl-dsa', 60, 28, 'steel');
+  buildTL('tl-run', 30, 14, 'green');
+  buildTL('tl-mvp', 45, 7, 'amber');
+}
+function buildTL(id, total, current, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'grid';
+  el.style.gridTemplateColumns = 'repeat(8,1fr)';
+  el.style.gap = '3px';
+  el.style.margin = '16px 0';
+  for (let i = 0; i < 8; i++) {
+    const div = document.createElement('div');
+    div.className = 'tl-bar';
+    const pos = Math.round((i / 7) * total);
+    if (pos < current) div.classList.add('done');
+    else if (pos === current || (pos > current && i === Math.floor(current / total * 7))) div.classList.add('today');
+    div.style.height = '32px';
+    el.appendChild(div);
+  }
+}
+
+// ── QUENCH MODAL ──
+let quenchData = {};
+function openQuench(title, stake, cat, task, day, total) {
+  quenchData = { title, stake, cat, task, day, total };
+  document.getElementById('qm-title').textContent = title;
+  document.getElementById('qm-stake').textContent = stake + ' staked · ' + cat + ' · Day ' + day + ' of ' + total;
+  document.getElementById('qm-task').textContent = task;
+  document.getElementById('qm-anim').className = 'quench-anim hot';
+  document.getElementById('qm-anim').innerHTML = '<i data-lucide="flame" class="quench-icon" style="color:var(--amber);"></i>';
+  document.getElementById('qm-success').style.display = 'none';
+  document.getElementById('qm-footer').style.display = 'flex';
+  document.getElementById('quench-modal').classList.add('open');
+  lucide.createIcons();
+}
+function closeQuench() {
+  document.getElementById('quench-modal').classList.remove('open');
+}
+function doQuench() {
+  const anim = document.getElementById('qm-anim');
+  anim.className = 'quench-anim cool';
+  anim.innerHTML = '<i data-lucide="check" class="quench-icon" style="color:var(--steel);"></i>';
+  lucide.createIcons();
+  setTimeout(() => {
+    document.getElementById('qm-footer').style.display = 'none';
+    document.getElementById('qm-success').style.display = 'block';
+    notify('Quenched! Forge Score updated.', 'success');
+    setTimeout(closeQuench, 3000);
+  }, 800);
+}
+function useBuffer() {
+  if (confirm('Use a buffer day? This extends your lock period by 1 day.')) {
+    notify('Buffer day applied. Lock period extended.', 'warning');
+    closeQuench();
+    const tokens = document.querySelectorAll('.buffer-token:not(.used)');
+    if (tokens.length) tokens[0].classList.add('used');
+  }
+}
+
+// ── SETTINGS ──
+function switchSettings(el, sectionId) {
+  document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(sectionId).classList.add('active');
+}
+
+// ── NOTIFICATIONS ──
+function notify(msg, type = 'info') {
+  const icons = { success: 'check-circle', warning: 'alert-triangle', info: 'info', error: 'x-circle' };
+  const titles = { success: 'Success', warning: 'Heads up', info: 'Info', error: 'Error' };
+  const el = document.createElement('div');
+  el.className = 'notif ' + type;
+  el.innerHTML = `<div class="notif-icon"><i data-lucide="${icons[type]}" style="width:16px;height:16px;"></i></div><div class="notif-body"><div class="notif-title">${titles[type]}</div><div class="notif-msg">${msg}</div></div>`;
+  document.getElementById('notif-wrap').appendChild(el);
+  lucide.createIcons();
+  setTimeout(() => el.remove(), 4500);
+}
+
+// ── AI PATHFINDER ──
+const AI_RESPONSES = {
+  default: [
+    "Got it. Let me analyze this goal.",
+    null, // triggers thinking
+    "Here's what I found after validating your goal:"
+  ]
+};
+
+const goalKnowledge = {
+  'dsa': { cat:'Skill', days:60, stake:'₹5,000', curve:[20,30,45,55,65,80,90,100], flag:null },
+  'mvp': { cat:'Build', days:45, stake:'₹10,000', curve:[55,65,60,60,70,80,90,100], flag:null },
+  '5k': { cat:'Fitness', days:30, stake:'₹3,000', curve:[45,55,60,65,65,70,85,100], flag:null },
+  '5am': { cat:'Habit', days:21, stake:'₹2,000', curve:[70,65,60,60,65,70,80,90], flag:null },
+  'books': { cat:'Skill', days:90, stake:'₹4,000', curve:[20,30,45,55,65,80,90,100], flag:null },
+  '5kg': { cat:'Fitness', days:14, stake:'₹3,000', curve:[45,55,60,65,65,70,85,100],
+    flag:'Losing 5kg in 2 weeks exceeds safe limits (~0.5–1kg/week). This timeline is medically inadvisable. I can plan a realistic 8-week version targeting 4–5kg safely, or a 2-week plan targeting 1kg with habit foundations. Which do you prefer?' }
+};
+
+function detectGoal(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('dsa') || m.includes('algorithm') || m.includes('coding interview')) return 'dsa';
+  if (m.includes('mvp') || m.includes('saas') || m.includes('ship') || m.includes('product')) return 'mvp';
+  if (m.includes('5k') || m.includes('run') || m.includes('5 km')) return '5k';
+  if (m.includes('5am') || m.includes('wake up') || m.includes('morning')) return '5am';
+  if (m.includes('book') || m.includes('read')) return 'books';
+  if (m.includes('5kg') || m.includes('lose') || m.includes('weight')) return '5kg';
+  return null;
+}
+
+let pfTyping = false;
+let pendingPlan = null;
+
+function pfKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); pfSend(); }
+}
+
+function sendSuggestion(text) {
+  document.getElementById('pf-input').value = text;
+  pfSend();
+}
+
+function addMsg(role, html) {
+  const msgs = document.getElementById('pf-messages');
+  const div = document.createElement('div');
+  div.className = 'pf-msg ' + role;
+  const avClass = role === 'ai' ? 'ai' : 'user';
+  const avContent = role === 'ai' ? '<i data-lucide="brain" style="width:14px;height:14px;"></i>' : 'AS';
+  div.innerHTML = `<div class="pf-msg-av ${avClass}">${avContent}</div><div class="pf-bubble">${html}</div>`;
+  msgs.appendChild(div);
+  lucide.createIcons();
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('pf-messages');
+  const div = document.createElement('div');
+  div.className = 'pf-msg ai';
+  div.id = 'pf-typing-indicator';
+  div.innerHTML = `<div class="pf-msg-av ai"><i data-lucide="brain" style="width:14px;height:14px;"></i></div><div class="pf-bubble"><div class="pf-typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  lucide.createIcons();
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('pf-typing-indicator');
+  if (el) el.remove();
+}
+
+function pfSend() {
+  const input = document.getElementById('pf-input');
+  const msg = input.value.trim();
+  if (!msg || pfTyping) return;
+  input.value = '';
+
+  addMsg('user', '<p>' + msg + '</p>');
+  pfTyping = true;
+  document.getElementById('pf-send').disabled = true;
+  addTyping();
+
+  const key = detectGoal(msg);
+  const data = key ? goalKnowledge[key] : null;
+
+  setTimeout(() => {
+    removeTyping();
+    pfTyping = false;
+    document.getElementById('pf-send').disabled = false;
+
+    if (!data) {
+      addMsg('ai', `<p>I can work with that. To build the most accurate plan, I need two things:</p><p><strong>1. Duration</strong> — how many days do you want to commit to?<br><strong>2. Stake</strong> — how much (₹) are you willing to lock?</p><p>Remember: the stake should create genuine discomfort if lost. I'll flag it if it's too low.</p>`);
+      return;
+    }
+
+    if (data.flag) {
+      addMsg('ai', `<div class="flag"><span class="flag-icon"><i data-lucide="alert-triangle" style="width:14px;height:14px;"></i></span><span>${data.flag}</span></div><p>I won't generate an unsafe plan. What would you like to do?</p>`);
+      return;
+    }
+
+    pendingPlan = data;
+    const curveColors = { Skill:'c-steel', Fitness:'c-green', Build:'c-amber', Habit:'c-amber' };
+    const cc = curveColors[data.cat] || 'c-amber';
+    showCurve(data.curve, cc, data.days);
+    showConfirm(msg.slice(0,40), data);
+
+    addMsg('ai', `<p>Validated. Here's what I found:</p>
+      <p>Category: <strong>${data.cat}</strong><br>Duration: <strong>${data.days} days</strong> — this is the minimum viable timeline for this goal type.<br>Recommended stake: <strong>${data.stake}</strong> (${Math.round(parseInt(data.stake.replace(/[^\d]/g,''))/data.days)}₹/day).</p>
+      <p>The intensity curve for a <strong>${data.cat}</strong> goal ${data.cat === 'Habit' ? 'peaks <em>early</em> — the first week is hardest. It eases as the habit automates.' : data.cat === 'Build' ? 'starts high, dips mid-period during creative exploration, then surges in the final crunch.' : 'builds slowly early and accelerates in the final third — consistent with how skills compound.'}</p>
+      <p>I've generated your curve and plan summary on the right. Say <strong>"forge it"</strong> to lock this in.</p>`);
+  }, 1800);
+
+  setTimeout(() => {
+    if (msg.toLowerCase().includes('forge it') || msg.toLowerCase().includes('yes') || msg.toLowerCase().includes('confirm')) {
+      if (pendingPlan) commitGoal();
+    }
+  }, 100);
+}
+
+function showCurve(arr, colorClass, totalDays) {
+  document.getElementById('curve-empty').style.display = 'none';
+  document.getElementById('curve-chart').style.display = 'block';
+  const bars = document.getElementById('curve-bars');
+  bars.innerHTML = '';
+  arr.forEach((val, i) => {
+    const div = document.createElement('div');
+    div.className = 'curve-bar ' + colorClass;
+    div.style.height = val + '%';
+    const day = Math.round((i / (arr.length - 1)) * totalDays) + 1;
+    div.setAttribute('data-label', 'Day ' + day + ': ' + val + '%');
+    bars.appendChild(div);
+  });
+  document.getElementById('curve-mid-label').textContent = 'Day ' + Math.round(totalDays / 2);
+  document.getElementById('curve-end-label').textContent = 'Day ' + totalDays;
+}
+
+function showConfirm(title, data) {
+  document.getElementById('plan-confirm-wrap').style.display = 'block';
+  document.getElementById('commit-btn-wrap').style.display = 'block';
+  document.getElementById('confirm-title').textContent = title + '…';
+  document.getElementById('confirm-cat').textContent = data.cat;
+  document.getElementById('confirm-days').textContent = data.days + ' days';
+  document.getElementById('confirm-stake').textContent = data.stake;
+}
+
+function commitGoal() {
+  if (!pendingPlan) return;
+  notify('Goal forged! Stake locked. Passive verification begins tonight.', 'success');
+  setTimeout(() => notify('Google Calendar synced — milestones added', 'info'), 1500);
+  pendingPlan = null;
+  document.getElementById('plan-confirm-wrap').style.display = 'none';
+  document.getElementById('commit-btn-wrap').style.display = 'none';
+  addMsg('ai', '<p>Done. Your goal has been forged. Passive verification begins tonight.</p><p>Head to <strong>My Plans</strong> to see your full roadmap and today\'s tasks.</p>');
+  setTimeout(() => showView('plans'), 2000);
+}
+</script>
+</body>
+</html>
