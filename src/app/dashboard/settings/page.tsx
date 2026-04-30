@@ -60,10 +60,87 @@ export default function SettingsPage() {
           {activeTab === 'verif' && (
             <div className="settings-section active" id="s-verif">
               <div className="settings-h">Verification connections</div>
-              <div className="settings-row"><div><div className="settings-row-label">GitHub</div><div className="settings-row-sub" style={{ color: 'var(--green)' }}>Connected · @{user?.user_metadata?.username || 'user'}</div></div><button className="btn btn-danger btn-sm">Disconnect</button></div>
-              <div className="settings-row"><div><div className="settings-row-label">Google Calendar</div><div className="settings-row-sub" style={{ color: 'var(--green)' }}>Connected</div></div><button className="btn btn-danger btn-sm">Disconnect</button></div>
-              <div className="settings-row"><div><div className="settings-row-label">GPS / Location</div><div className="settings-row-sub" style={{ color: 'var(--green)' }}>Connected</div></div><button className="btn btn-danger btn-sm">Disconnect</button></div>
-              <div className="settings-row"><div><div className="settings-row-label">Health Connect</div><div className="settings-row-sub" style={{ color: 'var(--amber)' }}>Not connected</div></div><button className="btn btn-amber btn-sm">Connect</button></div>
+
+              {/* GitHub */}
+              <div className="settings-row">
+                <div>
+                  <div className="settings-row-label">GitHub</div>
+                  <div className="settings-row-sub" style={{ color: profile?.github_handle ? 'var(--green)' : 'var(--text3)' }}>
+                    {profile?.github_handle ? `Connected · @${profile.github_handle}` : 'Not connected'}
+                  </div>
+                </div>
+                {profile?.github_handle ? (
+                  <button className="btn btn-danger btn-sm" onClick={async () => {
+                    await supabase.from('profiles').update({ github_handle: null }).eq('id', user.id);
+                    setProfile({ ...profile, github_handle: null });
+                  }}>Disconnect</button>
+                ) : (
+                  <input
+                    className="input" style={{ width: 200, padding: '6px 12px', fontSize: 13 }}
+                    placeholder="Enter GitHub username"
+                    onKeyDown={async (e: any) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        const handle = e.target.value.trim().replace(/^@/, '');
+                        await supabase.from('profiles').update({ github_handle: handle }).eq('id', user.id);
+                        setProfile({ ...profile, github_handle: handle });
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* LeetCode */}
+              <div className="settings-row">
+                <div>
+                  <div className="settings-row-label">LeetCode</div>
+                  <div className="settings-row-sub" style={{ color: profile?.leetcode_handle ? 'var(--green)' : 'var(--text3)' }}>
+                    {profile?.leetcode_handle ? `Connected · @${profile.leetcode_handle}` : 'Not connected'}
+                  </div>
+                </div>
+                {profile?.leetcode_handle ? (
+                  <button className="btn btn-danger btn-sm" onClick={async () => {
+                    await supabase.from('profiles').update({ leetcode_handle: null }).eq('id', user.id);
+                    setProfile({ ...profile, leetcode_handle: null });
+                  }}>Disconnect</button>
+                ) : (
+                  <input
+                    className="input" style={{ width: 200, padding: '6px 12px', fontSize: 13 }}
+                    placeholder="Enter LeetCode username"
+                    onKeyDown={async (e: any) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        const handle = e.target.value.trim().replace(/^@/, '');
+                        await supabase.from('profiles').update({ leetcode_handle: handle }).eq('id', user.id);
+                        setProfile({ ...profile, leetcode_handle: handle });
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* GPS */}
+              <div className="settings-row">
+                <div>
+                  <div className="settings-row-label">GPS / Location</div>
+                  <div className="settings-row-sub">Use browser geolocation for physical presence checks</div>
+                </div>
+                <button className="btn btn-amber btn-sm" onClick={() => {
+                  navigator.geolocation.getCurrentPosition(
+                    () => alert('GPS permission granted!'),
+                    () => alert('GPS permission denied. Enable in browser settings.')
+                  );
+                }}>Test GPS</button>
+              </div>
+
+              {/* Health */}
+              <div className="settings-row">
+                <div>
+                  <div className="settings-row-label">Health Connect</div>
+                  <div className="settings-row-sub" style={{ color: 'var(--text3)' }}>Coming soon</div>
+                </div>
+                <button className="btn btn-ghost btn-sm" disabled>Coming soon</button>
+              </div>
             </div>
           )}
           {activeTab === 'stake' && (

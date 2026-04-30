@@ -101,12 +101,31 @@ export async function POST(req: NextRequest) {
     }
 
     if (verified) {
-      let completedDays = forge.completed_days || [];
-      if (!completedDays.includes(currentDay)) {
-        completedDays.push(currentDay);
-        await supabaseAdmin.from('forges').update({ completed_days: completedDays }).eq('id', forge_id);
+      let completedDays: number[] = forge.completed_days || [];
+      const currentDayCapped = Math.min(currentDay, forge.duration_days);
+
+      if (!completedDays.includes(currentDayCapped)) {
+        completedDays = [...completedDays, currentDayCapped];
       }
-      return NextResponse.json({ success: true, verified: true, day: currentDay, message });
+
+      // Progress: only increases, never decreases, caps at 100
+      const rawProgress = Math.round((completedDays.length / forge.duration_days) * 100);
+      const newProgress  = Math.min(100, Math.max(forge.progress || 0, rawProgress));
+      const isNowComplete = newProgress >= 100;
+
+      const forgeUpdate: any = { completed_days: completedDays, progress: newProgress };
+      if (isNowComplete) forgeUpdate.status = 'completed';
+
+      await supabaseAdmin.from('forges').update(forgeUpdate).eq('id', forge_id);
+
+      if (isNowComplete) {
+        // +50 Forge Score on completion, capped at 1000
+        const newScore = Math.min(1000, (profile.forge_score || 0) + 50);
+        await supabaseAdmin.from('profiles').update({ forge_score: newScore }).eq('id', forge.user_id);
+        message = `Goal completed! +50 Forge Score awarded. ${message}`;
+      }
+
+      return NextResponse.json({ success: true, verified: true, day: currentDayCapped, progress: newProgress, completed: isNowComplete, message });
     }
 
     return NextResponse.json({ success: true, verified: false, message });

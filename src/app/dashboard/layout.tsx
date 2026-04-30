@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { 
-  Zap, LayoutDashboard, Brain, Map as MapIcon, Coins, 
+  LogOut, Zap, LayoutDashboard, Brain, Map as MapIcon, Coins, 
   Award, Clock, XCircle, Users, Settings, ChevronsUpDown, 
   Search, Bell, Plus 
 } from 'lucide-react';
@@ -34,6 +34,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchUser();
   }, [supabase, router]);
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   if (!authChecked) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text3)' }}>
@@ -54,13 +59,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return 'Dashboard';
   };
 
-  const NavItem = ({ href, icon: Icon, label, badge, id }: { href: string, icon: any, label: string, badge?: string, id: string }) => {
-    const isActive = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
-    return (
-      <Link href={href} className={`nav-item ${isActive ? 'active' : ''}`} id={id} title={sidebarCollapsed ? label : undefined}>
+  const NavItem = ({ href, icon: Icon, label, badge, id, onClick }: { href?: string, icon: any, label: string, badge?: string, id: string, onClick?: () => void }) => {
+    const isActive = href ? (href === '/dashboard' ? pathname === href : pathname.startsWith(href)) : false;
+    const content = (
+      <>
         <Icon className="nav-icon shrink-0" size={16} /> 
         {!sidebarCollapsed && <span className="whitespace-nowrap">{label}</span>}
         {!sidebarCollapsed && badge && <span className="nav-badge">{badge}</span>}
+      </>
+    );
+
+    if (onClick) {
+      return (
+        <button onClick={onClick} className={`nav-item w-full text-left`} id={id} title={sidebarCollapsed ? label : undefined}>
+          {content}
+        </button>
+      );
+    }
+
+    return (
+      <Link href={href!} className={`nav-item ${isActive ? 'active' : ''}`} id={id} title={sidebarCollapsed ? label : undefined}>
+        {content}
       </Link>
     );
   };
@@ -101,6 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="sb-section mt-2">
           {!sidebarCollapsed && <div className="sb-section-lbl">Account</div>}
           <NavItem href="/dashboard/settings" icon={Settings} label="Settings" id="nav-settings" />
+          <NavItem icon={LogOut} label="Sign Out" id="nav-signout" onClick={handleSignOut} />
         </div>
 
         <div className="sb-bottom mt-auto">

@@ -5,37 +5,89 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
+type FilterType = 'All' | 'Active' | 'Completed' | 'Failed';
+
+/** Derive the "real" status from DB status + dates */
+function deriveStatus(forge: any): 'Active' | 'Completed' | 'Failed' {
+  if (forge.status === 'Forged') return 'Completed';
+  // If the plan's time window has elapsed and it was never marked Forged → Failed
+  const elapsedDays = Math.ceil(
+    Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+  if (elapsedDays > forge.duration_days) return 'Failed';
+  return 'Active';
+}
+
+/** Current day number, capped at duration_days */
+function getCurrentDay(forge: any): number {
+  const elapsed = Math.ceil(
+    Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+  return Math.min(Math.max(elapsed, 1), forge.duration_days);
+}
+
+/** Progress % — 100% if failed/completed, proportional otherwise */
+function getProgress(forge: any, status: string): number {
+  if (status === 'Completed') return 100;
+  if (status === 'Failed') return 100;
+  const day = getCurrentDay(forge);
+  return Math.round((day / forge.duration_days) * 100) || 2;
+}
+
 export default function PlansPage() {
   const router = useRouter();
   const supabase = createClient();
   const [forges, setForges] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterType>('All');
 
   useEffect(() => {
     const fetchPlans = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase.from('forges').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data } = await supabase
+        .from('forges')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
       if (data) setForges(data);
       setIsLoading(false);
     };
     fetchPlans();
   }, [supabase]);
 
-  const activePlans = forges.filter(f => f.status === 'Active');
-  const completedPlans = forges.filter(f => f.status === 'Forged');
-  
-  const getProgress = (forge: any) => {
-    const total = forge.duration_days;
-    const daysActive = Math.ceil(Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) / (1000 * 60 * 60 * 24)) || 1;
-    return Math.round((Math.min(daysActive, total) / total) * 100) || 2;
+  // Annotate each forge with derived status
+  const annotated = forges.map(f => ({ ...f, _status: deriveStatus(f) }));
+
+  const activePlans    = annotated.filter(f => f._status === 'Active');
+  const completedPlans = annotated.filter(f => f._status === 'Completed');
+  const failedPlans    = annotated.filter(f => f._status === 'Failed');
+
+  const filtered =
+    filter === 'All'       ? annotated
+    : filter === 'Active'  ? activePlans
+    : filter === 'Completed' ? completedPlans
+    : failedPlans;
+
+  const badgeClass = (status: string) => {
+    if (status === 'Completed') return 'badge-green';
+    if (status === 'Failed')    return 'badge-red';
+    return 'badge-amber';
   };
-  
-  const getDay = (forge: any) => {
-    return Math.ceil(Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) / (1000 * 60 * 60 * 24)) || 1;
+
+  const barClass = (status: string, i: number, completedBars: number) => {
+    if (status === 'Failed') return 'tl-bar' + (i < completedBars ? ' done' : '');
+    if (status === 'Completed') return 'tl-bar done';
+    if (i < completedBars) return 'tl-bar done';
+    if (i === completedBars) return 'tl-bar today';
+    return 'tl-bar';
   };
 
   if (isLoading) return <div className="p-10 text-center">Loading plans...</div>;
+
+  const FILTERS: FilterType[] = ['All', 'Active', 'Completed', 'Failed'];
 
   return (
     <div className="view active" id="view-plans">
@@ -43,7 +95,7 @@ export default function PlansPage() {
         <div>
           <div className="view-h serif">My Plans</div>
           <div className="view-sub">
-            {activePlans.length} active · {completedPlans.length} completed · 0 failed
+            {activePlans.length} active · {completedPlans.length} completed · {failedPlans.length} failed
           </div>
         </div>
         <button className="btn btn-amber" onClick={() => router.push('/dashboard/pathfinder')}>
@@ -51,59 +103,127 @@ export default function PlansPage() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-        <button className="btn btn-amber btn-sm">All</button>
-        <button className="btn btn-ghost btn-sm">Active</button>
-        <button className="btn btn-ghost btn-sm">Completed</button>
-        <button className="btn btn-ghost btn-sm">Failed</button>
+      {/* ── Filter Tabs ── */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {FILTERS.map(f => (
+          <button
+            key={f}
+            className={`btn btn-sm ${filter === f ? 'btn-amber' : 'btn-ghost'}`}
+            onClick={() => setFilter(f)}
+          >
+            {f}
+            {f !== 'All' && (
+              <span style={{
+                marginLeft: 6,
+                fontSize: 11,
+                fontWeight: 700,
+                background: 'rgba(255,255,255,0.08)',
+                borderRadius: 99,
+                padding: '1px 7px',
+              }}>
+                {f === 'Active' ? activePlans.length
+                  : f === 'Completed' ? completedPlans.length
+                  : failedPlans.length}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
 
+      {/* ── Plan List ── */}
       <div className="plan-list">
-        {forges.length === 0 ? (
-          <div className="p-10 text-center rounded-lg border border-dashed border-border" style={{ color: 'var(--text3)' }}>
-            No plans forged yet.
+        {filtered.length === 0 ? (
+          <div
+            className="p-10 text-center rounded-lg border border-dashed"
+            style={{ color: 'var(--text3)', borderColor: 'var(--border)', padding: '60px 20px' }}
+          >
+            No {filter === 'All' ? '' : filter.toLowerCase() + ' '}plans found.
           </div>
         ) : (
-          forges.map(forge => {
-            const day = getDay(forge);
-            const progress = getProgress(forge);
-            const totalBars = 8;
+          filtered.map(forge => {
+            const status     = forge._status as string;
+            const day        = getCurrentDay(forge);
+            const progress   = getProgress(forge, status);
+            const totalBars  = 8;
             const completedBars = Math.floor((progress / 100) * totalBars);
-            
+            const daysLeft   = Math.max(0, forge.duration_days - day);
+            const isFailed   = status === 'Failed';
+
             return (
-              <div key={forge.id} className="plan-card card-hover" style={{ marginBottom: '16px' }} onClick={() => router.push(`/dashboard/goals/${forge.id}`)}>
+              <div
+                key={forge.id}
+                className="plan-card card-hover"
+                style={{
+                  marginBottom: 16,
+                  borderColor: isFailed ? 'rgba(224,92,92,0.3)' : undefined,
+                }}
+                onClick={() => router.push(`/dashboard/goals/${forge.id}`)}
+              >
                 <div className="plan-card-top">
                   <div>
-                    <div className="plan-card-title">{forge.title}</div>
+                    <div className="plan-card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {forge.title}
+                      {isFailed && (
+                        <span style={{ fontSize: 11, color: 'var(--red)', background: 'var(--redDim)', borderRadius: 4, padding: '2px 8px', fontWeight: 600 }}>
+                          FAILED
+                        </span>
+                      )}
+                    </div>
                     <div className="plan-card-category">
-                      {forge.category} · API verified · Started {new Date(forge.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {forge.category} · Started {new Date(forge.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div className="plan-stake">{forge.stake || '₹500'}</div>
+                    <div className="plan-stake">₹{String(forge.stake || '500').replace(/^₹/, '')}</div>
                     <div className="plan-stake-lbl">staked</div>
                   </div>
                 </div>
-                
+
+                {/* Timeline bars */}
                 <div className="plan-timeline">
-                  {Array.from({ length: totalBars }).map((_, i) => {
-                    let className = "tl-bar";
-                    if (i < completedBars) className += " done";
-                    else if (i === completedBars) className += " today";
-                    return <div key={i} className={className}></div>;
-                  })}
+                  {Array.from({ length: totalBars }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={barClass(status, i, completedBars)}
+                      style={isFailed ? { background: 'var(--redDim)', border: '1px solid rgba(224,92,92,0.25)' } : undefined}
+                    />
+                  ))}
                 </div>
-                
+
+                {/* Progress bar */}
                 <div className="prog-track">
-                  <div className="prog-fill prog-amber" style={{ width: `${progress}%` }}></div>
+                  <div
+                    className={`prog-fill ${isFailed ? '' : 'prog-amber'}`}
+                    style={{
+                      width: `${progress}%`,
+                      background: isFailed
+                        ? 'linear-gradient(90deg, var(--red), #f07070)'
+                        : status === 'Completed'
+                        ? 'linear-gradient(90deg, var(--green), #6ed49e)'
+                        : undefined,
+                    }}
+                  />
                 </div>
-                
+
+                {/* Footer */}
                 <div className="plan-footer">
                   <span className="plan-days-left">
-                    <strong>{Math.max(0, forge.duration_days - day)} days</strong> remaining · Day {day} of {forge.duration_days}
+                    {isFailed ? (
+                      <span style={{ color: 'var(--red)' }}>
+                        Plan expired — completed <strong>{day}</strong> of <strong>{forge.duration_days}</strong> days
+                      </span>
+                    ) : status === 'Completed' ? (
+                      <span style={{ color: 'var(--green)' }}>
+                        Completed all <strong>{forge.duration_days}</strong> days 🎉
+                      </span>
+                    ) : (
+                      <>
+                        <strong>{daysLeft} days</strong> remaining · Day {day} of {forge.duration_days}
+                      </>
+                    )}
                   </span>
-                  <span className={`badge ${forge.status === 'Active' ? 'badge-amber' : 'badge-green'}`}>
-                    {forge.status}
+                  <span className={`badge ${badgeClass(status)}`}>
+                    {status}
                   </span>
                 </div>
               </div>
@@ -114,4 +234,3 @@ export default function PlansPage() {
     </div>
   );
 }
-
