@@ -7,7 +7,10 @@ export default function GroupsPage() {
   return (
     <div className="view active" id="view-groups">
       <div className="view-header flex-between">
-        <div><div className="view-h serif">Group Goals</div><div className="view-sub">Shared accountability. Collective stakes.</div></div>
+        <div>
+          <div className="view-h serif">Group Goals</div>
+          <div className="view-sub">Shared accountability. Collective stakes.</div>
+        </div>
         <button className="btn btn-amber"><Plus size={16} /> Create pact</button>
       </div>
       <div className="pact-card">
@@ -25,10 +28,18 @@ export default function GroupsPage() {
           <div className="member-av" style={{ background: 'linear-gradient(135deg,#e05c5c,#ea8080)' }}>VJ</div>
         </div>
         <div>
-          <div className="flex-between" style={{ marginBottom: 8, fontSize: 12 }}><span style={{ color: 'var(--text2)' }}>Team progress</span><span style={{ fontWeight: 600, color: 'var(--amber)' }}>67%</span></div>
-          <div className="prog-track" style={{ height: 6 }}><div className="prog-fill prog-amber" style={{ width: '67%' }}></div></div>
+          <div className="flex-between" style={{ marginBottom: '8px', fontSize: '12px' }}>
+            <span style={{ color: 'var(--text2)' }}>Team progress</span>
+            <span style={{ fontWeight: 600, color: 'var(--amber)' }}>67%</span>
+          </div>
+          <div className="prog-track" style={{ height: '6px' }}>
+            <div className="prog-fill prog-amber" style={{ width: '67%' }}></div>
+          </div>
         </div>
-        <div className="pact-warning"><AlertTriangle size={14} className="shrink-0" /> If any member fails, all stakes are extended by the buffer period.</div>
+        <div className="pact-warning">
+          <AlertTriangle size={14} className="shrink-0" />
+          If any member fails, all stakes are extended by the buffer period.
+        </div>
       </div>
       <div className="pact-card" style={{ opacity: 0.6 }}>
         <div className="pact-header">
@@ -42,7 +53,9 @@ export default function GroupsPage() {
           <div className="member-av">A</div><div className="member-av">B</div><div className="member-av">C</div><div className="member-av">D</div>
           <div className="member-av" style={{ background: 'var(--surf2)', color: 'var(--text2)' }}>+4</div>
         </div>
-        <div className="prog-track" style={{ height: 6, marginTop: 12 }}><div className="prog-fill prog-green" style={{ width: '100%' }}></div></div>
+        <div className="prog-track" style={{ height: '6px', marginTop: '12px' }}>
+          <div className="prog-fill prog-green" style={{ width: '100%' }}></div>
+        </div>
       </div>
     </div>
   );

@@ -42,52 +42,76 @@ export default function PlansPage() {
       <div className="view-header flex-between">
         <div>
           <div className="view-h serif">My Plans</div>
-          <div className="view-sub">{activePlans.length} active · {completedPlans.length} completed</div>
+          <div className="view-sub">
+            {activePlans.length} active · {completedPlans.length} completed · 0 failed
+          </div>
         </div>
         <button className="btn btn-amber" onClick={() => router.push('/dashboard/pathfinder')}>
           <Plus size={16} /> New plan
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
         <button className="btn btn-amber btn-sm">All</button>
         <button className="btn btn-ghost btn-sm">Active</button>
         <button className="btn btn-ghost btn-sm">Completed</button>
         <button className="btn btn-ghost btn-sm">Failed</button>
       </div>
 
-      {forges.length === 0 ? (
-        <div className="p-10 text-center rounded-lg border border-dashed border-border" style={{ color: 'var(--text3)' }}>
-          No plans forged yet.
-        </div>
-      ) : (
-        forges.map(forge => {
-          const day = getDay(forge);
-          const progress = getProgress(forge);
-          return (
-            <div key={forge.id} className="plan-card" style={{ marginBottom: 16 }}>
-              <div className="plan-card-top">
-                <div>
-                  <div className="plan-card-title">{forge.title}</div>
-                  <div className="plan-card-category">{forge.category} · Started {new Date(forge.created_at).toLocaleDateString()}</div>
+      <div className="plan-list">
+        {forges.length === 0 ? (
+          <div className="p-10 text-center rounded-lg border border-dashed border-border" style={{ color: 'var(--text3)' }}>
+            No plans forged yet.
+          </div>
+        ) : (
+          forges.map(forge => {
+            const day = getDay(forge);
+            const progress = getProgress(forge);
+            const totalBars = 8;
+            const completedBars = Math.floor((progress / 100) * totalBars);
+            
+            return (
+              <div key={forge.id} className="plan-card card-hover" style={{ marginBottom: '16px' }} onClick={() => router.push(`/dashboard/goals/${forge.id}`)}>
+                <div className="plan-card-top">
+                  <div>
+                    <div className="plan-card-title">{forge.title}</div>
+                    <div className="plan-card-category">
+                      {forge.category} · API verified · Started {new Date(forge.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="plan-stake">{forge.stake || '₹500'}</div>
+                    <div className="plan-stake-lbl">staked</div>
+                  </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="plan-stake">{forge.stake || '₹500'}</div>
-                  <div className="plan-stake-lbl">staked</div>
+                
+                <div className="plan-timeline">
+                  {Array.from({ length: totalBars }).map((_, i) => {
+                    let className = "tl-bar";
+                    if (i < completedBars) className += " done";
+                    else if (i === completedBars) className += " today";
+                    return <div key={i} className={className}></div>;
+                  })}
+                </div>
+                
+                <div className="prog-track">
+                  <div className="prog-fill prog-amber" style={{ width: `${progress}%` }}></div>
+                </div>
+                
+                <div className="plan-footer">
+                  <span className="plan-days-left">
+                    <strong>{Math.max(0, forge.duration_days - day)} days</strong> remaining · Day {day} of {forge.duration_days}
+                  </span>
+                  <span className={`badge ${forge.status === 'Active' ? 'badge-amber' : 'badge-green'}`}>
+                    {forge.status}
+                  </span>
                 </div>
               </div>
-              <div className="plan-timeline">
-                 <div className="tl-bar done"></div><div className="tl-bar today"></div><div className="tl-bar"></div>
-              </div>
-              <div className="prog-track"><div className="prog-fill prog-amber" style={{ width: `${progress}%` }}></div></div>
-              <div className="plan-footer">
-                <span className="plan-days-left"><strong>{Math.max(0, forge.duration_days - day)} days</strong> remaining · Day {day} of {forge.duration_days}</span>
-                <span className={`badge ${forge.status === 'Active' ? 'badge-amber' : 'badge-green'}`}>{forge.status}</span>
-              </div>
-            </div>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
+

@@ -66,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div id="page-dash" className="page active min-h-screen flex">
+    <div id="page-dash" className="page active min-h-screen flex items-stretch">
       {/* SIDEBAR */}
       <aside className="sidebar transition-all duration-300" style={{ width: sidebarCollapsed ? '72px' : 'var(--sidebar)' }}>
         <div className="sb-logo flex items-center justify-between">

@@ -6,10 +6,13 @@ import { AlertTriangle } from 'lucide-react';
 export default function SlagPage() {
   return (
     <div className="view active" id="view-slag">
-      <div className="view-header"><div className="view-h serif">Slag Heap</div><div className="view-sub">Goals that didn't make it. Learn, adapt, return stronger.</div></div>
-      <div style={{ background: 'var(--redDim)', border: '1px solid rgba(224,92,92,.15)', borderRadius: 'var(--rlg)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+      <div className="view-header">
+        <div className="view-h serif">Slag Heap</div>
+        <div className="view-sub">Goals that didn't make it. Learn, adapt, return stronger.</div>
+      </div>
+      <div style={{ background: 'var(--redDim)', border: '1px solid rgba(224,92,92,.15)', borderRadius: 'var(--rlg)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
         <AlertTriangle size={16} className="text-red-500 shrink-0" />
-        <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>4 goals in the slag heap. The AI will analyze patterns and suggest improvements when you set similar goals.</p>
+        <p style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5 }}>4 goals in the slag heap. The AI will analyze patterns and suggest improvements when you set similar goals.</p>
       </div>
       <div className="slag-card">
         <div className="slag-title">No social media for 14 days</div>

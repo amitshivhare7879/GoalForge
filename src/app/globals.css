@@ -93,7 +93,8 @@ img{display:block;max-width:100%;}
 .container{max-width:1200px;margin:0 auto;padding:0 40px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
-.flex{display:flex;align-items:center;}
+.flex{display:flex;}
+.items-center{align-items:center;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 .flex-col{display:flex;flex-direction:column;}
 
@@ -234,11 +235,11 @@ hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
    DASHBOARD SHELL
 ══════════════════════════════════════════ */
 #page-dash{display:none;min-height:100vh;}
-#page-dash.active{display:flex;}
+#page-dash.active{display:flex;align-items:stretch;}
 
 /* sidebar */
 .sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow-y:auto;}
-.sb-logo{padding:22px 20px;border-bottom:1px solid var(--border);}
+.sb-logo{padding:16px 20px;border-bottom:1px solid var(--border);}
 .sb-section{padding:12px 12px 0;}
 .sb-section-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:8px 8px 6px;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;margin-bottom:1px;}
@@ -257,7 +258,7 @@ hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
 .main-content{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:100vh;}
 
 /* top bar */
-.topbar{padding:16px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.topbar{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
 .topbar-left{display:flex;align-items:center;gap:16px;}
 .topbar-title{font-size:16px;font-weight:600;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
