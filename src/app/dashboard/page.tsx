@@ -32,6 +32,7 @@ interface Forge {
   stake_amount: string;
   status: string;
   buffer_days_used: number;
+  verification_method: string;
   created_at: string;
 }
 

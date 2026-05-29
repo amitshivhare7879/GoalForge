@@ -29,6 +29,7 @@ interface Goal {
   tasks: any[];
   completed_days: number[];
   buffer_days_used: number;
+  verification_method: string;
   created_at: string;
 }
 
@@ -41,7 +42,7 @@ export default function GoalDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isUpdating, setIsUpdating] = useState(false);
-  const [verifyType, setVerifyType] = useState('github');
+  const [verifyType, setVerifyType] = useState('manual');
 
   useEffect(() => {
     const fetchGoal = async () => {
@@ -64,6 +65,7 @@ export default function GoalDetailPage() {
       }
 
       setGoal(data);
+      setVerifyType(data.verification_method || 'manual');
       setIsLoading(false);
     };
 

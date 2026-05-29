@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.forges (
     stake TEXT DEFAULT '₹500',
     completed_days INT[] DEFAULT '{}',
     buffer_days_used INT DEFAULT 0,
+    verification_method TEXT DEFAULT 'manual',
     status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Forged', 'Broken', 'active')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
