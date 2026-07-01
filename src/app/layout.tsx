@@ -26,7 +26,22 @@ export const metadata: Metadata = {
   title: "GoalForge — Stop Dreaming. Start Forging.",
   description: "A next-generation accountability platform to turn your goals into tempered steel.",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "GoalForge",
+  },
 };
+
+export const viewport = {
+  themeColor: "#f5a623",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 
 export default function RootLayout({
   children,

@@ -1,36 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { ChevronLeft, Flame, Zap, Shield, Clock, Calendar, Camera, MapPin } from 'lucide-react';
+import { ChevronLeft, Flame, Zap, Shield, Clock, Calendar } from 'lucide-react';
 import { ForgeButton } from '@/components/ForgeButton';
 import { sendNotification } from '@/components/NotificationManager';
+import { QuenchAnimation } from '@/components/dashboard/QuenchAnimation';
+import { deriveGoalStatus, getCurrentDay, getGoalProgress } from '@/lib/goal-helpers';
 
 // ── helpers ────────────────────────────────────────────────
-function getDerivedStatus(goal: any): 'Active' | 'Completed' | 'Failed' {
-  const s = (goal.status || '').toLowerCase();
-  if (s === 'completed' || s === 'forged') return 'Completed';
-  if (s === 'forfeited') return 'Failed';
-  const elapsed = Math.ceil(
-    Math.abs(Date.now() - new Date(goal.created_at).getTime()) / 86400000
-  );
-  if (elapsed > goal.duration_days) return 'Failed';
-  return 'Active';
-}
-
-function getCurrentDay(goal: any): number {
-  const elapsed = Math.ceil(
-    Math.abs(Date.now() - new Date(goal.created_at).getTime()) / 86400000
-  ) || 1;
-  return Math.min(elapsed, goal.duration_days);
-}
-
-function getProgress(goal: any, status: string): number {
-  if (status === 'Completed') return 100;
-  if (status === 'Failed') return 100;
-  return Math.round((getCurrentDay(goal) / goal.duration_days) * 100) || 2;
-}
 
 const generateGoogleCalendarUrl = (task: string, day: number, startDate: string) => {
   const date = new Date(startDate);
@@ -55,7 +34,12 @@ export default function GoalDetailPage() {
   const [goal, setGoal]           = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [verifyType, setVerifyType] = useState('github');
+  // Ref-based guard: immune to React batching — blocks double-clicks before state flush
+  const isUpdatingRef = useRef(false);
+  // Supported verification types
+  const SUPPORTED_VERIFY_TYPES = ['github', 'leetcode', 'hashnode'] as const;
+  const [verifyType, setVerifyType] = useState<string>('github');
+  const [showQuench, setShowQuench] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +57,9 @@ export default function GoalDetailPage() {
   }, [id]);
 
   const handleTaskAction = async (day: number, action: 'complete' | 'buffer') => {
-    if (!goal || isUpdating) return;
+    // Ref check runs synchronously — blocks concurrent clicks before React re-renders
+    if (!goal || isUpdatingRef.current) return;
+    isUpdatingRef.current = true;
 
     // ── BUFFER ──────────────────────────────────────────────
     if (action === 'buffer') {
@@ -96,28 +82,38 @@ export default function GoalDetailPage() {
         setGoal({ ...goal, ...forgeUpdate });
         sendNotification('Buffer Used', `Day extended. ${3 - newBufferUsed} buffer${3 - newBufferUsed !== 1 ? 's' : ''} remaining. -10 Forge Score.`);
       }
+      isUpdatingRef.current = false;
       setIsUpdating(false);
       return;
     }
 
     // ── COMPLETE ─────────────────────────────────────────────
     if (action === 'complete') {
-      if ((goal.completed_days || []).includes(day)) return; // already done
+      // Idempotency: bail out if day already marked or goal already Forged
+      const alreadyDone = (goal.completed_days || []).includes(day);
+      const alreadyForged = (goal.status || '').toLowerCase() === 'forged';
+      if (alreadyDone || alreadyForged) {
+        isUpdatingRef.current = false;
+        return;
+      }
       setIsUpdating(true);
       const updatedCompleted = [...(goal.completed_days || []), day];
-      // Progress = completed / total days (0-100, only increases)
+      // Progress = completed / total days (0-100, only increases — never go backwards)
       const rawProgress = Math.round((updatedCompleted.length / goal.duration_days) * 100);
       const newProgress  = Math.min(100, Math.max(goal.progress || 0, rawProgress));
       const isNowComplete = newProgress >= 100;
       const forgeUpdate: any = { completed_days: updatedCompleted, progress: newProgress };
-      if (isNowComplete) forgeUpdate.status = 'completed';
+      // Canonical completed status — 'Forged' (checked case-insensitively in deriveGoalStatus)
+      if (isNowComplete) forgeUpdate.status = 'Forged';
       const { error: fe } = await supabase.from('forges').update(forgeUpdate).eq('id', goal.id);
       if (!fe) {
         setGoal({ ...goal, ...forgeUpdate });
         if (isNowComplete) {
-          // +50 Forge Score on completion
+          setShowQuench(true);
+          // Award +50 Forge Score — idempotent: only if the goal JUST transitioned to Forged
           const { data: { user: u } } = await supabase.auth.getUser();
-          const { data: prof } = await supabase.from('profiles').select('forge_score').eq('id', u!.id).single();
+          const { data: prof } = await supabase
+            .from('profiles').select('forge_score').eq('id', u!.id).single();
           const newScore = Math.min(1000, (prof?.forge_score || 0) + 50);
           await supabase.from('profiles').update({ forge_score: newScore }).eq('id', u!.id);
           sendNotification('Goal Complete! 🎉', '+50 Forge Score awarded. Stake returned.');
@@ -125,6 +121,7 @@ export default function GoalDetailPage() {
           sendNotification('Day Complete', `Day ${day} verified. Progress: ${newProgress}%`);
         }
       }
+      isUpdatingRef.current = false;
       setIsUpdating(false);
     }
   };
@@ -136,9 +133,9 @@ export default function GoalDetailPage() {
   );
   if (!goal) return null;
 
-  const status     = getDerivedStatus(goal);
+  const status     = deriveGoalStatus(goal);
   const currentDay = getCurrentDay(goal);
-  const progress   = getProgress(goal, status);
+  const progress   = getGoalProgress(goal, status);
   const daysLeft   = Math.max(0, goal.duration_days - currentDay);
   const isFailed   = status === 'Failed';
   const isCompleted = status === 'Completed';
@@ -426,7 +423,7 @@ export default function GoalDetailPage() {
                     Protocol 01 · Auto-Sync
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {['github', 'leetcode', 'hashnode', 'twitter'].map(type => (
+                    {SUPPORTED_VERIFY_TYPES.map(type => (
                       <button key={type} onClick={() => setVerifyType(type)} style={{
                         padding: '5px 10px', borderRadius: 6, fontSize: 10, fontWeight: 700,
                         textTransform: 'uppercase', letterSpacing: '.06em', cursor: 'pointer', transition: 'all .2s',
@@ -453,41 +450,14 @@ export default function GoalDetailPage() {
                   </button>
                 </div>
 
-                {/* Physical proof */}
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--amber)', marginBottom: 8 }}>
-                    Protocol 02 · Proof
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    <button onClick={() => {
-                      if (!navigator.geolocation) return;
-                      setIsUpdating(true);
-                      navigator.geolocation.getCurrentPosition(async pos => {
-                        const res = await fetch('/api/verify', { method: 'POST', body: JSON.stringify({ forge_id: goal.id, type: 'location', coords: { latitude: pos.coords.latitude, longitude: pos.coords.longitude } }) });
-                        const result = await res.json();
-                        if (result.verified) { sendNotification('GPS Verified', 'Location confirmed.'); window.location.reload(); }
-                        setIsUpdating(false);
-                      });
-                    }} style={{
-                      padding: '14px 8px', borderRadius: 8, display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', gap: 6, cursor: 'pointer', transition: 'all .2s',
-                      background: 'var(--surf2)', border: '1px solid var(--border)', color: 'var(--text3)'
-                    }}>
-                      <MapPin size={18} /><span style={{ fontSize: 10, fontWeight: 700 }}>GPS Check</span>
-                    </button>
-                    <div style={{ position: 'relative', padding: '14px 8px', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: 'var(--surf2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer' }}>
-                      <input type="file" accept="image/*" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 10 }} onChange={async () => {
-                        setIsUpdating(true);
-                        sendNotification('AI Processing', 'Analyzing evidence...');
-                        await new Promise(r => setTimeout(r, 2000));
-                        const res = await fetch('/api/verify', { method: 'POST', body: JSON.stringify({ forge_id: goal.id, type: 'manual' }) });
-                        const result = await res.json();
-                        if (result.verified) { sendNotification('Proof Confirmed', 'Visual proof matched.'); window.location.reload(); }
-                        setIsUpdating(false);
-                      }} />
-                      <Camera size={18} /><span style={{ fontSize: 10, fontWeight: 700 }}>Upload Proof</span>
-                    </div>
-                  </div>
+                {/* Protocol 02 — Coming soon placeholder (GPS/photo out of scope for MVP) */}
+                <div style={{
+                  marginTop: 4, padding: '12px', borderRadius: 8, fontSize: 11, color: 'var(--text3)',
+                  background: 'var(--bg3)', border: '1px solid var(--border)', lineHeight: 1.5
+                }}>
+                  <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--text3)' }}>Protocol 02 · Physical Proof</span>
+                  <br />
+                  GPS &amp; photo-upload verification coming in a future release.
                 </div>
               </div>
             )}
@@ -511,6 +481,44 @@ export default function GoalDetailPage() {
           </div>
         </div>
       </div>
+      {/* Quench Modal */}
+      {showQuench && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+        }}>
+          <div style={{
+            background: 'var(--bg2)', border: '1px solid var(--border)',
+            borderRadius: 24, width: '100%', maxWidth: 500, overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowQuench(false)}
+              style={{
+                position: 'absolute', top: 20, right: 20, zIndex: 10,
+                background: 'var(--surf2)', border: '1px solid var(--border)',
+                borderRadius: '50%', width: 32, height: 32, cursor: 'pointer',
+                color: 'var(--text3)'
+              }}
+            >
+              ✕
+            </button>
+            <QuenchAnimation status="Completed" onComplete={() => console.log('Quench done')} />
+            <div style={{ padding: '0 32px 32px', textAlign: 'center' }}>
+              <button 
+                className="btn btn-amber btn-full"
+                onClick={() => {
+                  setShowQuench(false);
+                  router.push('/dashboard/plans');
+                }}
+              >
+                Return to Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

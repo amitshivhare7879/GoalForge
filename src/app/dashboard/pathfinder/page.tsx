@@ -116,6 +116,8 @@ export default function PathfinderPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Ref guard: synchronous check that survives React batching — prevents duplicate forge inserts
+  const isSubmittingRef = useRef(false);
   const [extractedPlan, setExtractedPlan] = useState<ExtractedPlan | null>(null);
   // Separate controlled state for the editable stake field so editing
   // doesn't trigger a full re-render of the plan object on every keystroke.
@@ -143,10 +145,12 @@ export default function PathfinderPage() {
     setIsLoading(true);
 
     try {
+      // Truncate history to last 10 messages to avoid context overflow (fix 3.11)
+      const recentMessages = [...messages, userMessage].slice(-10);
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ messages: recentMessages }),
       });
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -197,10 +201,11 @@ export default function PathfinderPage() {
       setMessages(prev => [...prev, userMessage]);
       setIsLoading(true);
 
+      const recentSuggestionMessages = [...messages, userMessage].slice(-10);
       fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ messages: recentSuggestionMessages }),
       })
         .then(r => r.json())
         .then(data => {
@@ -218,7 +223,9 @@ export default function PathfinderPage() {
   // ── Commit goal ─────────────────────────────────────────────────────────────
 
   const initiateProtocol = async () => {
-    if (!extractedPlan || isSubmitting) return;
+    // Ref check is synchronous — blocks second click before setIsSubmitting re-renders
+    if (!extractedPlan || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -236,8 +243,10 @@ export default function PathfinderPage() {
         title: extractedPlan.title || 'Untitled Forge',
         category: extractedPlan.category || 'Discipline',
         duration_days: Number(extractedPlan.duration_days) || 30,
+        difficulty_curve: extractedPlan.curve || [],
         tasks: extractedPlan.tasks,
         stake: stakeInput || extractedPlan.stake || '₹500',
+        progress: 0,
         status: 'Active',
       });
 
@@ -250,12 +259,16 @@ export default function PathfinderPage() {
             content: `**Forge initiation failed.** ${error.message}. Please try again.`,
           },
         ]);
+        // Release lock so user can retry after an error
+        isSubmittingRef.current = false;
         setIsSubmitting(false);
       } else {
+        // Navigate away — do NOT release the lock (prevents back-button re-submit)
         router.push('/dashboard');
       }
     } catch (err) {
       console.error('[GoalForge] Unexpected error:', err);
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

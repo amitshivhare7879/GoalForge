@@ -4,37 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { deriveGoalStatus, getCurrentDay, getGoalProgress } from '@/lib/goal-helpers';
 
 type FilterType = 'All' | 'Active' | 'Completed' | 'Failed';
 
-/** Derive the "real" status from DB status + dates */
-function deriveStatus(forge: any): 'Active' | 'Completed' | 'Failed' {
-  if (forge.status === 'Forged') return 'Completed';
-  // If the plan's time window has elapsed and it was never marked Forged → Failed
-  const elapsedDays = Math.ceil(
-    Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
-  if (elapsedDays > forge.duration_days) return 'Failed';
-  return 'Active';
-}
-
-/** Current day number, capped at duration_days */
-function getCurrentDay(forge: any): number {
-  const elapsed = Math.ceil(
-    Math.abs(new Date().getTime() - new Date(forge.created_at).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
-  return Math.min(Math.max(elapsed, 1), forge.duration_days);
-}
-
-/** Progress % — 100% if failed/completed, proportional otherwise */
-function getProgress(forge: any, status: string): number {
-  if (status === 'Completed') return 100;
-  if (status === 'Failed') return 100;
-  const day = getCurrentDay(forge);
-  return Math.round((day / forge.duration_days) * 100) || 2;
-}
 
 export default function PlansPage() {
   const router = useRouter();
@@ -59,7 +32,7 @@ export default function PlansPage() {
   }, [supabase]);
 
   // Annotate each forge with derived status
-  const annotated = forges.map(f => ({ ...f, _status: deriveStatus(f) }));
+  const annotated = forges.map(f => ({ ...f, _status: deriveGoalStatus(f) }));
 
   const activePlans    = annotated.filter(f => f._status === 'Active');
   const completedPlans = annotated.filter(f => f._status === 'Completed');
@@ -141,9 +114,9 @@ export default function PlansPage() {
           </div>
         ) : (
           filtered.map(forge => {
-            const status     = forge._status as string;
+            const status     = forge._status;
             const day        = getCurrentDay(forge);
-            const progress   = getProgress(forge, status);
+            const progress   = getGoalProgress(forge, status);
             const totalBars  = 8;
             const completedBars = Math.floor((progress / 100) * totalBars);
             const daysLeft   = Math.max(0, forge.duration_days - day);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function SettingsPage() {
@@ -9,6 +9,12 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+
+  // Controlled inputs for profile tab (FIX 3.8 / M-11)
+  const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -16,12 +22,36 @@ export default function SettingsPage() {
       if (user) {
         setUser(user);
         const { data: profileData } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (profileData) setProfile(profileData);
+        if (profileData) {
+          setProfile(profileData);
+          setDisplayName(profileData.display_name || user.user_metadata?.full_name || '');
+          setUsername(profileData.username || user.user_metadata?.username || '');
+        }
       }
       setIsLoading(false);
     };
     fetchUser();
   }, [supabase]);
+
+  // FIX M-11: Actually persist the profile changes to Supabase
+  const handleProfileSave = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    setSaveMsg('');
+    const { error } = await supabase.from('profiles').update({
+      display_name: displayName,
+      username: username,
+    }).eq('id', user.id);
+
+    if (error) {
+      setSaveMsg('Failed to save changes. Please try again.');
+    } else {
+      setSaveMsg('Changes saved successfully!');
+      setProfile({ ...profile, display_name: displayName, username });
+    }
+    setIsSaving(false);
+    setTimeout(() => setSaveMsg(''), 3000);
+  };
 
   if (isLoading) return <div className="p-10 text-center">Loading settings...</div>;
 
@@ -42,10 +72,42 @@ export default function SettingsPage() {
           {activeTab === 'profile' && (
             <div className="settings-section active" id="s-profile">
               <div className="settings-h">Profile</div>
-              <div className="form-group"><label className="label">Display name</label><input className="input" defaultValue={user?.user_metadata?.full_name || 'User'} /></div>
-              <div className="form-group"><label className="label">Email</label><input className="input" defaultValue={user?.email || ''} readOnly /></div>
-              <div className="form-group"><label className="label">Username</label><input className="input" defaultValue={user?.user_metadata?.username || ''} /></div>
-              <button className="btn btn-amber">Save changes</button>
+              {/* FIX M-11: Use controlled inputs so values are persisted on save */}
+              <div className="form-group">
+                <label className="label">Display name</label>
+                <input
+                  className="input"
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  placeholder="Your display name"
+                />
+              </div>
+              <div className="form-group">
+                <label className="label">Email</label>
+                <input className="input" defaultValue={user?.email || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label className="label">Username</label>
+                <input
+                  className="input"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  placeholder="your_username"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button className="btn btn-amber" onClick={handleProfileSave} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save changes'}
+                </button>
+                {saveMsg && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: saveMsg.includes('Failed') ? 'var(--red)' : 'var(--green)'
+                  }}>
+                    {saveMsg}
+                  </span>
+                )}
+              </div>
             </div>
           )}
           {activeTab === 'notif' && (
@@ -119,7 +181,7 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              {/* GPS */}
+              {/* GPS — coming soon */}
               <div className="settings-row">
                 <div>
                   <div className="settings-row-label">GPS / Location</div>
@@ -133,7 +195,7 @@ export default function SettingsPage() {
                 }}>Test GPS</button>
               </div>
 
-              {/* Health */}
+              {/* Health Connect */}
               <div className="settings-row">
                 <div>
                   <div className="settings-row-label">Health Connect</div>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { deriveGoalStatus } from '@/lib/goal-helpers';
+
 
 export default function SlagPage() {
   const supabase = createClient();
@@ -16,14 +18,16 @@ export default function SlagPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
+      // FIX 3.7: Fetch all forges (not just status === 'Broken'), then filter client-side
       const { data: forgesData } = await supabase
         .from('forges')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'Broken')
         .order('updated_at', { ascending: false });
 
-      if (forgesData) setForges(forgesData);
+      if (forgesData) {
+        setForges(forgesData.filter(f => deriveGoalStatus(f) === 'Failed'));
+      }
       setIsLoading(false);
     };
     fetchData();

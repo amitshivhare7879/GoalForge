@@ -1,16 +1,17 @@
 {
   "name": "GoalForge",
   "short_name": "GoalForge",
-  "description": "Premium Discipline Architect & Accountability Platform",
-  "start_url": "/",
+  "description": "A high-fidelity goal tracking application with AI-driven pathfinding, staking, and cinematic feedback loops.",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#030303",
-  "theme_color": "#FF8C00",
+  "orientation": "portrait",
+  "background_color": "#0b0b0d",
+  "theme_color": "#f5a623",
   "icons": [
     {
-      "src": "/globe.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/3d_forge_orb_1776279920999.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

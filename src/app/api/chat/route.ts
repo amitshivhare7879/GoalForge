@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HfInference } from '@huggingface/inference';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+const MODEL_ID = "deepseek-ai/DeepSeek-V3";
 
 const SYSTEM_PROMPT = `You are the GoalForge AI Pathfinder — an elite discipline architect and realistic accountability coach.
 
@@ -168,12 +171,12 @@ JSON FORMAT (output only after user confirms — wrap in triple backticks)
 \`\`\`
 `;
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+// Max messages to send to the API to avoid context window overflow (issue 3.11)
+const MAX_HISTORY_MESSAGES = 10;
 
 export async function POST(req: NextRequest) {
   try {
-    // Auth check: verify user session
+    const { messages } = await req.json();
     const cookieStore = await cookies();
     const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -185,30 +188,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { messages } = await req.json();
-
     if (!process.env.HUGGINGFACE_API_KEY) {
-      console.warn("HUGGINGFACE_API_KEY not found.");
-      return NextResponse.json({ error: "Missing API Key" }, { status: 500 });
+      console.error('HUGGINGFACE_API_KEY is not configured.');
+      return NextResponse.json({ error: 'AI service is not configured.' }, { status: 500 });
     }
 
-    const payloadMessages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...messages.map((m: any) => ({ role: m.role, content: m.content }))
-    ];
+    // Truncate to the most recent MAX_HISTORY_MESSAGES to avoid context overflow
+    const recentMessages = messages.slice(-MAX_HISTORY_MESSAGES);
 
     const response = await hf.chatCompletion({
-      model: "meta-llama/Meta-Llama-3-8B-Instruct",
-      messages: payloadMessages,
+      model: MODEL_ID,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...recentMessages.map((m: { role: string; content: string }) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }))
+      ],
       max_tokens: 3072,
+      temperature: 0.7,
     });
 
     const content = response.choices[0].message.content || '';
 
-    return NextResponse.json({ text: content });
+    return NextResponse.json({ text: content.trim() });
 
   } catch (error) {
-    console.error("Chat error:", error);
-    return NextResponse.json({ error: "Failed to generate chat response" }, { status: 500 });
+    console.error('Chat error:', error);
+    return NextResponse.json({ error: 'Failed to generate chat response' }, { status: 500 });
   }
 }

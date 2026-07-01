@@ -73,20 +73,22 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="l-hero-visual relative">
-          <div className="forge-orb mx-auto mt-10">
+        <div className="l-hero-visual">
+          <div className="forge-orb">
             <div className="forge-orb-inner">
               <Award className="forge-orb-icon" />
             </div>
           </div>
-          <div className="float-tag ft1 flex items-center gap-1.5 border-border">
-            <GitCommit size={12} /> GitHub verified
+          <div className="float-tag ft1">
+            <GitCommit size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />
+            GitHub verified
           </div>
-          <div className="float-tag ft2 border-border">
-            <span className="text-green-500 mr-1">●</span> Passive tracking
+          <div className="float-tag ft2">
+            <span style={{ color: 'var(--green)', marginRight: 6 }}>●</span> Passive tracking
           </div>
-          <div className="float-tag ft3 flex items-center gap-1.5 border-border">
-            <Shield size={12} className="text-amber-500" /> Stake protected
+          <div className="float-tag ft3">
+            <Shield size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6, color: 'var(--amber)' }} />
+            Stake protected
           </div>
         </div>
       </section>

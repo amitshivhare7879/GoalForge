@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
+// @ts-expect-error - next-pwa does not provide TypeScript declarations
+import withPWAInit from "next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Disable turbopack for next-pwa compatibility
-  },
   images: {
     remotePatterns: [
       {
@@ -18,4 +24,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
+

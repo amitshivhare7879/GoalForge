@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Hammer } from 'lucide-react';
+import { Hammer, Trophy, Zap, Shield, Award, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -38,11 +38,11 @@ export default function ForgeScorePage() {
   }, [supabase, router]);
 
   const getRank = (score: number) => {
-    if (score < 300) return { name: 'Apprentice', icon: '🪨', next: 300 - score };
-    if (score < 600) return { name: 'Craftsman', icon: '⚒️', next: 600 - score };
-    if (score < 1000) return { name: 'Journeyman', icon: '🔨', next: 1000 - score };
-    if (score < 1500) return { name: 'Master', icon: '⚡', next: 1500 - score };
-    return { name: 'Grandmaster', icon: '🏆', next: 0 };
+    if (score < 300) return { name: 'Apprentice', icon: <Shield size={20} />, next: 300 - score };
+    if (score < 600) return { name: 'Craftsman', icon: <Hammer size={20} />, next: 600 - score };
+    if (score < 1000) return { name: 'Journeyman', icon: <Award size={20} />, next: 1000 - score };
+    if (score < 1500) return { name: 'Master', icon: <Zap size={20} />, next: 1500 - score };
+    return { name: 'Grandmaster', icon: <Trophy size={20} />, next: 0 };
   };
 
   const rank = getRank(profile?.forge_score || 0);
@@ -85,11 +85,11 @@ export default function ForgeScorePage() {
           <div className="card" style={{ marginBottom: '20px' }}>
             <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px' }}>Rank ladder</div>
             <div className="rank-ladder">
-              <div className={`rank-item ${rank.name === 'Apprentice' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--amberDim)', fontSize: '16px' }}>🪨</div><div className="rank-name">Apprentice</div><div className="rank-range">0–299</div></div>
-              <div className={`rank-item ${rank.name === 'Craftsman' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--steelDim)', fontSize: '16px' }}>⚒️</div><div className="rank-name">Craftsman</div><div className="rank-range">300–599</div></div>
-              <div className={`rank-item ${rank.name === 'Journeyman' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--amberDim)', fontSize: '16px' }}>🔨</div><div className="rank-name">Journeyman</div><div className="rank-range">600–999</div></div>
-              <div className={`rank-item ${rank.name === 'Master' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'rgba(255,255,255,.04)', fontSize: '16px' }}>⚡</div><div className="rank-name">Master</div><div className="rank-range">1000–1499</div></div>
-              <div className={`rank-item ${rank.name === 'Grandmaster' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'rgba(255,255,255,.04)', fontSize: '16px' }}>🏆</div><div className="rank-name">Grandmaster</div><div className="rank-range">1500+</div></div>
+              <div className={`rank-item ${rank.name === 'Apprentice' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--amberDim)', color: 'var(--amber)' }}><Shield size={16} /></div><div className="rank-name">Apprentice</div><div className="rank-range">0–299</div></div>
+              <div className={`rank-item ${rank.name === 'Craftsman' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--steelDim)', color: 'var(--steel)' }}><Hammer size={16} /></div><div className="rank-name">Craftsman</div><div className="rank-range">300–599</div></div>
+              <div className={`rank-item ${rank.name === 'Journeyman' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'var(--amberDim)', color: 'var(--amber)' }}><Award size={16} /></div><div className="rank-name">Journeyman</div><div className="rank-range">600–999</div></div>
+              <div className={`rank-item ${rank.name === 'Master' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'rgba(255,255,255,.04)', color: 'var(--text2)' }}><Zap size={16} /></div><div className="rank-name">Master</div><div className="rank-range">1000–1499</div></div>
+              <div className={`rank-item ${rank.name === 'Grandmaster' ? 'current' : ''}`}><div className="rank-icon" style={{ background: 'rgba(255,255,255,.04)', color: 'var(--amber)' }}><Trophy size={16} /></div><div className="rank-name">Grandmaster</div><div className="rank-range">1500+</div></div>
             </div>
           </div>
         </div>

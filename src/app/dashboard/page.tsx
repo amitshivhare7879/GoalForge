@@ -1,22 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Flame, ShieldCheck, CheckCircle2, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { deriveGoalStatus, getCurrentDay } from '@/lib/goal-helpers';
 
-// ── shared helpers (same logic as plans/goal-detail pages) ──
-function getDerivedStatus(forge: any): 'Active' | 'Completed' | 'Failed' {
-  if (forge.status === 'Forged') return 'Completed';
-  const elapsed = Math.ceil(Math.abs(Date.now() - new Date(forge.created_at).getTime()) / 86400000);
-  if (elapsed > forge.duration_days) return 'Failed';
-  return 'Active';
-}
-
-function getCurrentDay(forge: any): number {
-  const elapsed = Math.ceil(Math.abs(Date.now() - new Date(forge.created_at).getTime()) / 86400000) || 1;
-  return Math.min(elapsed, forge.duration_days);
-}
 
 function parseStake(raw: any): number {
   return parseFloat(String(raw || '0').replace(/[^0-9.]/g, '')) || 0;
@@ -248,7 +237,8 @@ export default function DashboardPage() {
   const [forges, setForges]   = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Task completion local state: { [forgeId_day]: boolean }
+  // Tracks keys currently being written to DB — blocks duplicate concurrent calls
+  const inFlightRef = useRef<Set<string>>(new Set());
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -273,7 +263,7 @@ export default function DashboardPage() {
   }, []);
 
   // ── derived stats ──────────────────────────────────────
-  const annotated     = forges.map(f => ({ ...f, _status: getDerivedStatus(f) }));
+  const annotated     = forges.map(f => ({ ...f, _status: deriveGoalStatus(f) }));
   const activeForges  = annotated.filter(f => f._status === 'Active');
   const completedForges = annotated.filter(f => f._status === 'Completed');
   const failedForges  = annotated.filter(f => f._status === 'Failed');
@@ -314,13 +304,27 @@ export default function DashboardPage() {
   });
 
   const markComplete = async (key: string, forgeId: string, day: number) => {
+    // Bail immediately if already done (optimistic) or already in-flight for this key
+    if (completedMap[key] || inFlightRef.current.has(key)) return;
+    inFlightRef.current.add(key);
+
+    // Optimistic UI update
     const updated = { ...completedMap, [key]: true };
     setCompletedMap(updated);
+
     const forge = forges.find(f => f.id === forgeId);
-    if (!forge) return;
-    const newDays = [...(forge.completed_days || []), day];
-    await supabase.from('forges').update({ completed_days: newDays }).eq('id', forgeId);
-    setForges(prev => prev.map(f => f.id === forgeId ? { ...f, completed_days: newDays } : f));
+    if (!forge) { inFlightRef.current.delete(key); return; }
+
+    const newDays = [...new Set([...(forge.completed_days || []), day])]; // dedup just in case
+    const { error } = await supabase.from('forges').update({ completed_days: newDays }).eq('id', forgeId);
+
+    if (error) {
+      // Rollback optimistic update on failure
+      setCompletedMap(prev => { const r = { ...prev }; delete r[key]; return r; });
+    } else {
+      setForges(prev => prev.map(f => f.id === forgeId ? { ...f, completed_days: newDays } : f));
+    }
+    inFlightRef.current.delete(key);
   };
 
   const [calendarOpen, setCalendarOpen] = useState(false);
