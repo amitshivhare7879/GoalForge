@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Flame, ShieldCheck, CheckCircle2, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { deriveGoalStatus, getCurrentDay } from '@/lib/goal-helpers';
+import UpdateChecker from '@/components/dashboard/UpdateChecker';
 
 
 function parseStake(raw: any): number {
@@ -549,6 +550,9 @@ export default function DashboardPage() {
 
           {/* Calendar Modal */}
           {calendarOpen && <CalendarModal tasksByDate={tasksByDate} onClose={() => setCalendarOpen(false)} />}
+
+          {/* Native Update Checker */}
+          <UpdateChecker />
         </div>
       </div>
     </div>

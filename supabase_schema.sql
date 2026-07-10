@@ -108,3 +108,24 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ============================================================
+-- App Versioning for APK/PWA Auto-Updates
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.app_versions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    version_name TEXT NOT NULL,          -- e.g., "1.0.0"
+    version_code INT NOT NULL,           -- e.g., 1
+    download_url TEXT NOT NULL,          -- e.g., GitHub Releases page or direct APK URL
+    release_notes TEXT,                  -- What's new in the release
+    is_mandatory BOOLEAN DEFAULT false,  -- If true, force update redirect
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.app_versions ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access so any app instance can check for updates
+CREATE POLICY "Allow public read access to app_versions" ON public.app_versions
+    FOR SELECT USING (true);
+
